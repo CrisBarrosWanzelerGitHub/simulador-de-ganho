@@ -1213,7 +1213,18 @@
     downloadsReady.then(function(dl){
       var bytes = makePdf(name, solName, fileTitle);
       if (!dl){
-        // Site próprio (ex.: GitHub Pages): baixa o PDF gerado pelo simulador
+        // Site próprio (ex.: GitHub Pages)
+        // No celular: abre a tela de compartilhamento com o PDF
+        var file = null;
+        try { file = new File([bytes], fileName, { type: "application/pdf" }); } catch (e) {}
+        var isTouch = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+        if (file && isTouch && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })){
+          return navigator.share({ files: [file], title: fileTitle }).catch(function(err){
+            if (err && err.name === "AbortError") return; // a pessoa fechou a tela de compartilhamento
+            saveBlob(bytes, fileName);
+          });
+        }
+        // No computador: baixa o PDF gerado pelo simulador
         try {
           saveBlob(bytes, fileName);
         } catch (e) {
