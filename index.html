@@ -239,7 +239,8 @@
   .validity{margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
   .plan-toggle{margin:0 0 6px;font-size:13px}
   .plan-toggle button{padding:6px 14px;font-size:13px}
-  .rule-note{font-style:italic}
+  #rec-row{flex-wrap:wrap;row-gap:0}
+  .rule-note{font-style:italic;flex-basis:100%;margin-top:1px}
   .line-hint{display:block;font-size:12px;color:var(--mist);margin-top:1px}
   .lines li.total{border-bottom:0;padding-top:16px}
   .lines li.total span{color:var(--ink);font-weight:600;font-size:17px}
@@ -456,7 +457,7 @@
         </div>
         <ul class="lines">
           <li><span>Implementação<small class="line-hint" id="impl-hint"></small></span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button></li>
-          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small><small class="line-hint rule-note" id="rec-note"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span></li>
+          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span><small class="line-hint rule-note" id="rec-note"></small></li>
           <li id="apoio-row" hidden><span>Apoio eventual<small class="line-hint" id="apoio-hint"></small></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de apoios"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor de cada apoio"></button></span></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
@@ -514,7 +515,7 @@
     // (o valor e a quantidade também podem ser editados com um clique na proposta)
 
     // ---- Observação exibida abaixo da mensalidade ----
-    textoRegraMensalidade: "Inclui uma solicitação de apoio por semana, conforme as regras contratuais consensuadas.",
+    textoRegraMensalidade: "Inclui um apoio por semana, conforme o contrato.",
 
     // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "apoio" ----
     acompanhamentoPadrao: "mensalidade",
@@ -841,8 +842,8 @@
     $("net-label").textContent = "Ganho no faturamento em " + mTxt;
     $("reset-price").hidden = state.implManual === null && (isApoio || state.recManual === null);
     $("reset-price").textContent = "Usar preço proporcional ao ganho";
-    $("impl-hint").textContent = c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x um ganho mensal";
-    $("rec-hint").textContent = c.recMin ? "Valor mínimo de mensalidade" : n1.format(state.rec) + "% de um ganho mensal";
+    $("impl-hint").textContent = c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x do ganho mensal";
+    $("rec-hint").textContent = c.recMin ? "Valor mínimo de mensalidade" : n1.format(state.rec) + "% do ganho mensal";
     var minApplied = c.implMin || c.recMin;
     var showViability = c.impM > 0 && minApplied && (CONFIG.avisarSempreQueMinimoForAplicado || c.net <= 0);
     $("viability").textContent = CONFIG.textoAvisoViabilidade;
