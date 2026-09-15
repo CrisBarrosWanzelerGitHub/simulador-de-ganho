@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!--
+  SIMULADOR DE FATURAMENTO
+  Para alterar preços, valores mínimos, apoio eventual, prazo do plano,
+  validade da proposta e e-mail de contato, procure pelo bloco
+  "CONFIGURAÇÕES EDITÁVEIS", no início do script, perto do fim deste arquivo.
+-->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -229,7 +235,10 @@
   .lines{list-style:none;margin:0;padding:0}
   .lines li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
   .lines li > span:first-child{color:var(--stone)}
+  .viability{margin:12px 0 0;font-size:12px;color:var(--warn);text-align:center}
   .validity{margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
+  .plan-toggle{margin:0 0 6px;font-size:13px}
+  .plan-toggle button{padding:6px 14px;font-size:13px}
   .line-hint{display:block;font-size:12px;color:var(--mist);margin-top:1px}
   .lines li.total{border-bottom:0;padding-top:16px}
   .lines li.total span{color:var(--ink);font-weight:600;font-size:17px}
@@ -357,6 +366,7 @@
     .net{margin-top:10px;padding:10px 14px}
     .net strong{font-size:17px}
     .validity{margin-top:8px;font-size:10px}
+    .viability{margin-top:6px;font-size:9.5px}
     footer{margin-top:14px;font-size:9.5px;max-width:none}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact;transition:none!important}
   }
@@ -427,7 +437,7 @@
           <p class="v num" id="roi"></p>
         </div>
         <div class="stat">
-          <p class="k">Prazo de retorno, já descontada a mensalidade</p>
+          <p class="k" id="payback-label"></p>
           <p class="v num" id="payback"></p>
         </div>
         <div class="stat">
@@ -439,9 +449,14 @@
       <section class="panel proposal hide-invalid" aria-labelledby="t-proposal">
         <h2 id="t-proposal">Investimento</h2>
         <p class="hint" id="proposal-hint"></p>
+        <div class="segmented plan-toggle" role="group" aria-label="Forma de acompanhamento">
+          <button type="button" data-plan="mensalidade">Mensalidade</button>
+          <button type="button" data-plan="apoio">Apoio eventual</button>
+        </div>
         <ul class="lines">
           <li><span>Implementação<small class="line-hint" id="impl-hint"></small></span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button></li>
-          <li><span>Mensalidade<small class="line-hint" id="rec-hint"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span></li>
+          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span></li>
+          <li id="apoio-row" hidden><span>Apoio eventual<small class="line-hint" id="apoio-hint"></small></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de apoios"></button> × <span id="apoio-valor"></span></span></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
         <div class="net">
@@ -449,6 +464,7 @@
           <strong class="num" id="net"></strong>
         </div>
         <div class="reset-row"><button type="button" class="link" id="reset-price" hidden></button></div>
+        <p class="viability" id="viability" hidden></p>
         <p class="validity" id="validity"></p>
       </section>
     </main>
@@ -468,7 +484,7 @@
   </dialog>
 
   <footer>Simulação baseada nos valores informados. Os resultados são estimativas e podem variar conforme o mercado, a sazonalidade e a operação de cada negócio.
-    <div class="contact">Entre em contato: <a href="mailto:crisbarroswanzeler@gmail.com">crisbarroswanzeler@gmail.com</a></div>
+    <div class="contact">Entre em contato: <a id="contact-email" href="mailto:crisbarroswanzeler@gmail.com">crisbarroswanzeler@gmail.com</a></div>
     <div class="contact">Até breve!</div>
   </footer>
 </div>
@@ -476,6 +492,44 @@
 <script>
 (function(){
   "use strict";
+
+  /* ==========================================================================
+     CONFIGURAÇÕES EDITÁVEIS
+     Altere os valores abaixo sempre que quiser. Use números sem "R$" e sem
+     ponto de milhar (exemplo: 1500, e não 1.500).
+     ========================================================================== */
+  var CONFIG = {
+    // ---- Preço proporcional ao ganho mensal ----
+    multiplicadorImplementacao: 2,   // implementação = ganho mensal × este número
+    percentualMensalidade: 20,       // mensalidade = este % do ganho mensal
+
+    // ---- Valores mínimos (em R$), usados quando o cálculo proporcional dá menos ----
+    implementacaoMinima: 1000,
+    mensalidadeMinima: 400,
+
+    // ---- Apoio eventual (alternativa à mensalidade) ----
+    valorApoioEventual: 200,         // valor de cada apoio (em R$)
+    apoiosPrevistos: 2,              // quantidade sugerida ao abrir a página
+
+    // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "apoio" ----
+    acompanhamentoPadrao: "mensalidade",
+
+    // ---- Plano e simulação ----
+    mesesDoPlano: 12,                // duração do plano (em meses)
+    acrescimoAutomatico: 3,          // pontos % somados ao cenário "com a solução"
+
+    // ---- Aviso "o projeto não se torna viável no momento" ----
+    //   true  = sempre que algum valor mínimo for aplicado
+    //   false = somente quando, com os mínimos, o investimento supera o ganho do período
+    avisarSempreQueMinimoForAplicado: true,
+    textoAvisoViabilidade: "Com os números atuais, os valores proporcionais ficam abaixo do mínimo do projeto. Por isso, ele não se torna viável no momento.",
+
+    // ---- Proposta ----
+    validadeDias: 30,                // prazo de validade (em dias)
+    emailContato: "crisbarroswanzeler@gmail.com"
+  };
+  /* ======================= FIM DAS CONFIGURAÇÕES ========================== */
+
   var jsOff = document.getElementById("js-off");
   if (jsOff) jsOff.hidden = true;
 
@@ -483,13 +537,15 @@
   var state = {
     model: "conv",
     leads: 300,
-    convA: 10, convB: 13,
-    slots: 200, occA: 70, occB: 73,
+    convA: 10, convB: 10 + CONFIG.acrescimoAutomatico,
+    slots: 200, occA: 70, occB: 70 + CONFIG.acrescimoAutomatico,
     ticket: 300,
-    months: 12,       // duração do plano
-    offset: 3,        // acréscimo automático (pontos percentuais)
-    mult: 2,          // multiplicador da implementação
-    rec: 20,          // mensalidade (% do ganho mensal)
+    months: CONFIG.mesesDoPlano,
+    offset: CONFIG.acrescimoAutomatico,
+    mult: CONFIG.multiplicadorImplementacao,
+    rec: CONFIG.percentualMensalidade,
+    plan: CONFIG.acompanhamentoPadrao === "apoio" ? "apoio" : "mensalidade",
+    apoios: CONFIG.apoiosPrevistos,
     implManual: null, // preço fixo definido à mão
     recManual: null
   };
@@ -659,16 +715,25 @@
     }
     var revA = uA * s.ticket, revB = uB * s.ticket;
     var impM = revB - revA;
-    var impl = s.implManual !== null ? s.implManual : impM * s.mult;
-    var recM = s.recManual !== null ? s.recManual : impM * s.rec / 100;
-    var invest = impl + recM * s.months;
+    // Preço proporcional ao ganho, respeitando os mínimos definidos em CONFIG
+    var implAuto = impM * s.mult, recAuto = impM * s.rec / 100;
+    var implMin = s.implManual === null && implAuto < CONFIG.implementacaoMinima;
+    var isApoio = s.plan === "apoio";
+    var recMin = !isApoio && s.recManual === null && recAuto < CONFIG.mensalidadeMinima;
+    var impl = s.implManual !== null ? s.implManual : Math.max(implAuto, CONFIG.implementacaoMinima);
+    var recM = s.recManual !== null ? s.recManual : Math.max(recAuto, CONFIG.mensalidadeMinima);
+    var apoioTotal = s.apoios * CONFIG.valorApoioEventual;
+    var invest = isApoio ? impl + apoioTotal : impl + recM * s.months;
     var annual = impM * s.months;
     var net = annual - invest;
     return {
       uA:uA, uB:uB, revA:revA, revB:revB, impM:impM, annual:annual,
-      impl:impl, recM:recM, invest:invest, net:net,
+      impl:impl, recM:recM, invest:invest, net:net, implMin:implMin, recMin:recMin,
       roi: invest > 0 ? net / invest * 100 : 0,
-      payback: (impM - recM) > 0 ? impl / (impM - recM) : null,
+      apoioTotal:apoioTotal,
+      payback: isApoio
+        ? (impM > 0 ? (impl + apoioTotal) / impM : null)
+        : ((impM - recM) > 0 ? impl / (impM - recM) : null),
       growth: revA > 0 ? impM / revA * 100 : null
     };
   }
@@ -749,13 +814,31 @@
     $("months").textContent = n0.format(m);
     $("hero-label").textContent = "Faturamento adicional em " + mTxt;
     $("roi-period").textContent = "em " + mTxt;
-    $("proposal-hint").textContent = "Implementação única e acompanhamento mensal por " + mTxt + ".";
+    var isApoio = state.plan === "apoio";
+    $("proposal-hint").textContent = isApoio
+      ? "Implementação única e apoio eventual conforme a necessidade, em " + mTxt + "."
+      : "Implementação única e acompanhamento mensal por " + mTxt + ".";
+    document.querySelectorAll(".plan-toggle button").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.plan === state.plan));
+    });
+    $("rec-row").hidden = isApoio;
+    $("apoio-row").hidden = !isApoio;
+    $("apoios").textContent = n0.format(state.apoios);
+    $("apoio-valor").textContent = money(CONFIG.valorApoioEventual);
+    $("apoio-hint").textContent = "Previsão de apoios, cobrados somente quando utilizados";
+    $("payback-label").textContent = isApoio
+      ? "Prazo de retorno, já incluídos os apoios previstos"
+      : "Prazo de retorno, já descontada a mensalidade";
     $("total-label").textContent = "Total em " + mTxt;
     $("net-label").textContent = "Ganho no faturamento em " + mTxt;
-    $("reset-price").hidden = state.implManual === null && state.recManual === null;
+    $("reset-price").hidden = state.implManual === null && (isApoio || state.recManual === null);
     $("reset-price").textContent = "Usar preço proporcional ao ganho";
-    $("impl-hint").textContent = n1.format(state.mult) + "x um ganho mensal";
-    $("rec-hint").textContent = n1.format(state.rec) + "% de um ganho mensal";
+    $("impl-hint").textContent = c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x um ganho mensal";
+    $("rec-hint").textContent = c.recMin ? "Valor mínimo de mensalidade" : n1.format(state.rec) + "% de um ganho mensal";
+    var minApplied = c.implMin || c.recMin;
+    var showViability = c.impM > 0 && minApplied && (CONFIG.avisarSempreQueMinimoForAplicado || c.net <= 0);
+    $("viability").textContent = CONFIG.textoAvisoViabilidade;
+    $("viability").hidden = !showViability;
     $("impl-hint").hidden = state.implManual !== null;
     $("rec-hint").hidden = state.recManual !== null;
   }
@@ -918,7 +1001,7 @@
     var sTop = hy + 10, colW = rw / 3, sp = 12;
     var stats = [
       {label:"Retorno sobre o investimento em " + mTxt, value:$("roi").textContent, pill:"ROI"},
-      {label:"Prazo de retorno, já descontada a mensalidade", value:$("payback").textContent},
+      {label:$("payback-label").textContent, value:$("payback").textContent},
       {label:"Crescimento do faturamento mensal", value:$("growth-pct").textContent}
     ];
     var maxLines = 0;
@@ -946,11 +1029,13 @@
     var iTop = sBottom + 10, iy = iTop + rp + 9;
     pg.text("Investimento", rx + rp, iy, "HB", 10.5, PC.ink);
     iy += 14;
-    pg.text("Implementação única e acompanhamento mensal por " + mTxt + ".", rx + rp, iy, "H", 7.5, PC.stone);
+    pg.text($("proposal-hint").textContent, rx + rp, iy, "H", 7.5, PC.stone);
     iy += 8;
     var rows = [
       ["Implementação", money(c.impl), state.implManual === null ? $("impl-hint").textContent : ""],
-      ["Mensalidade", n0.format(m) + " × " + money(c.recM), state.recManual === null ? $("rec-hint").textContent : ""]
+      state.plan === "apoio"
+        ? ["Apoio eventual", n0.format(state.apoios) + " × " + money(CONFIG.valorApoioEventual), $("apoio-hint").textContent]
+        : ["Mensalidade", n0.format(m) + " × " + money(c.recM), state.recManual === null ? $("rec-hint").textContent : ""]
     ];
     rows.forEach(function(r){
       iy += 16;
@@ -968,6 +1053,13 @@
     pg.text("Ganho no faturamento em " + mTxt, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
     pg.text(money(c.net), R - rp - 12, iy + 20.5, "HB", 13, PC.after, "right");
     iy += 32 + 16;
+    if (!$("viability").hidden){
+      wrapText($("viability").textContent, "H", 7, rw - rp * 2).forEach(function(t){
+        pg.text(t, rx + rw / 2, iy - 4, "H", 7, "#8A5A2B", "center");
+        iy += 9;
+      });
+      iy += 3;
+    }
     pg.text($("validity").textContent, rx + rw / 2, iy, "H", 7.5, PC.stone, "center");
     iy += 12;
     pg.rrect(rx, iTop, rw, iy - iTop, 8, null, PC.line);
@@ -978,7 +1070,7 @@
       .forEach(function(t){ pg.text(t, L, fy, "H", 7, PC.mist); fy += 9; });
     fy += 4;
     var w4 = pg.text("Entre em contato: ", L, fy, "H", 7, PC.mist);
-    pg.text("crisbarroswanzeler@gmail.com", L + w4, fy, "H", 7, PC.stone);
+    pg.text(CONFIG.emailContato, L + w4, fy, "H", 7, PC.stone);
     fy += 9;
     pg.text("Até breve!", L, fy, "H", 7, PC.mist);
 
@@ -995,12 +1087,22 @@
   $("rec").addEventListener("click", function(){
     inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); });
   });
+  $("apoios").addEventListener("click", function(){
+    inlineEdit($("apoios"), state.apoios, function(v){ state.apoios = clamp(Math.round(v), 0, 99); }, "months");
+  });
+  document.querySelectorAll(".plan-toggle button").forEach(function(b){
+    b.addEventListener("click", function(){ state.plan = b.dataset.plan; update(); });
+  });
+  var emailEl = $("contact-email");
+  emailEl.textContent = CONFIG.emailContato;
+  emailEl.href = "mailto:" + CONFIG.emailContato;
+
   $("reset-price").addEventListener("click", function(){
     state.implManual = null; state.recManual = null; update();
   });
 
   /* ------- Seletor de modelo ------- */
-  var tabs = document.querySelectorAll(".segmented button");
+  var tabs = document.querySelectorAll(".segmented button[data-model]");
   tabs.forEach(function(b){
     b.addEventListener("click", function(){
       state.model = b.dataset.model;
@@ -1045,9 +1147,8 @@
 
   /* ------- Data e impressão ------- */
   $("date").textContent = new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"});
-  var VALIDADE_DIAS = 30;
-  var ate = new Date(); ate.setDate(ate.getDate() + VALIDADE_DIAS);
-  $("validity").textContent = "Proposta válida por " + VALIDADE_DIAS + " dias, até " +
+  var ate = new Date(); ate.setDate(ate.getDate() + CONFIG.validadeDias);
+  $("validity").textContent = "Proposta válida por " + CONFIG.validadeDias + " dias, até " +
     ate.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}) + ".";
   var printing = false;
   var downloadsReady = (window.claude && typeof window.claude.use === "function")
