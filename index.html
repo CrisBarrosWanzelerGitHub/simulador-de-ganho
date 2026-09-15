@@ -693,6 +693,11 @@
       if (r.divider) r.divider.hidden = !(visible && d.dividerIn.indexOf(state.model) > -1);
       if (!visible) return;
 
+      // A faixa se ajusta para incluir o valor digitado
+      if (v < d.min) d.min = v;
+      if (v > d.max) d.max = v;
+      var aligned = Math.abs(d.min / d.step - Math.round(d.min / d.step)) < 1e-9;
+      r.input.step = aligned ? d.step : ((d.f === "int" || d.f === "money") ? 1 : "any");
       r.input.min = d.min;
       r.input.max = d.max;
       r.input.value = clamp(v, d.min, d.max);
