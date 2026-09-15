@@ -239,6 +239,7 @@
   .validity{margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
   .plan-toggle{margin:0 0 6px;font-size:13px}
   .plan-toggle button{padding:6px 14px;font-size:13px}
+  .rule-note{font-style:italic}
   .line-hint{display:block;font-size:12px;color:var(--mist);margin-top:1px}
   .lines li.total{border-bottom:0;padding-top:16px}
   .lines li.total span{color:var(--ink);font-weight:600;font-size:17px}
@@ -455,8 +456,8 @@
         </div>
         <ul class="lines">
           <li><span>Implementação<small class="line-hint" id="impl-hint"></small></span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button></li>
-          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span></li>
-          <li id="apoio-row" hidden><span>Apoio eventual<small class="line-hint" id="apoio-hint"></small></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de apoios"></button> × <span id="apoio-valor"></span></span></li>
+          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small><small class="line-hint rule-note" id="rec-note"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span></li>
+          <li id="apoio-row" hidden><span>Apoio eventual<small class="line-hint" id="apoio-hint"></small></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de apoios"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor de cada apoio"></button></span></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
         <div class="net">
@@ -510,6 +511,10 @@
     // ---- Apoio eventual (alternativa à mensalidade) ----
     valorApoioEventual: 200,         // valor de cada apoio (em R$)
     apoiosPrevistos: 2,              // quantidade sugerida ao abrir a página
+    // (o valor e a quantidade também podem ser editados com um clique na proposta)
+
+    // ---- Observação exibida abaixo da mensalidade ----
+    textoRegraMensalidade: "Inclui uma solicitação de apoio por semana, conforme as regras contratuais consensuadas.",
 
     // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "apoio" ----
     acompanhamentoPadrao: "mensalidade",
@@ -546,6 +551,7 @@
     rec: CONFIG.percentualMensalidade,
     plan: CONFIG.acompanhamentoPadrao === "apoio" ? "apoio" : "mensalidade",
     apoios: CONFIG.apoiosPrevistos,
+    apoioValor: CONFIG.valorApoioEventual,
     implManual: null, // preço fixo definido à mão
     recManual: null
   };
@@ -722,7 +728,7 @@
     var recMin = !isApoio && s.recManual === null && recAuto < CONFIG.mensalidadeMinima;
     var impl = s.implManual !== null ? s.implManual : Math.max(implAuto, CONFIG.implementacaoMinima);
     var recM = s.recManual !== null ? s.recManual : Math.max(recAuto, CONFIG.mensalidadeMinima);
-    var apoioTotal = s.apoios * CONFIG.valorApoioEventual;
+    var apoioTotal = s.apoios * s.apoioValor;
     var invest = isApoio ? impl + apoioTotal : impl + recM * s.months;
     var annual = impM * s.months;
     var net = annual - invest;
@@ -824,7 +830,9 @@
     $("rec-row").hidden = isApoio;
     $("apoio-row").hidden = !isApoio;
     $("apoios").textContent = n0.format(state.apoios);
-    $("apoio-valor").textContent = money(CONFIG.valorApoioEventual);
+    $("apoio-valor").textContent = money(state.apoioValor);
+    $("rec-note").textContent = CONFIG.textoRegraMensalidade;
+    $("rec-note").hidden = !CONFIG.textoRegraMensalidade;
     $("apoio-hint").textContent = "Previsão de apoios, cobrados somente quando utilizados";
     $("payback-label").textContent = isApoio
       ? "Prazo de retorno, já incluídos os apoios previstos"
@@ -1034,14 +1042,15 @@
     var rows = [
       ["Implementação", money(c.impl), state.implManual === null ? $("impl-hint").textContent : ""],
       state.plan === "apoio"
-        ? ["Apoio eventual", n0.format(state.apoios) + " × " + money(CONFIG.valorApoioEventual), $("apoio-hint").textContent]
-        : ["Mensalidade", n0.format(m) + " × " + money(c.recM), state.recManual === null ? $("rec-hint").textContent : ""]
+        ? ["Apoio eventual", n0.format(state.apoios) + " × " + money(state.apoioValor), $("apoio-hint").textContent]
+        : ["Mensalidade", n0.format(m) + " × " + money(c.recM), state.recManual === null ? $("rec-hint").textContent : "", CONFIG.textoRegraMensalidade]
     ];
     rows.forEach(function(r){
       iy += 16;
       pg.text(r[0], rx + rp, iy, "H", 9, PC.stone);
       pg.text(r[1], R - rp, iy, "H", 9, PC.ink, "right");
       if (r[2]){ iy += 10; pg.text(r[2], rx + rp, iy, "H", 6.8, PC.mist); }
+      if (r[3]){ iy += 9; pg.text(r[3], rx + rp, iy, "H", 6.8, PC.stone); }
       iy += 8;
       pg.line(rx + rp, iy, R - rp, iy, PC.line);
     });
@@ -1086,6 +1095,9 @@
   });
   $("rec").addEventListener("click", function(){
     inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); });
+  });
+  $("apoio-valor").addEventListener("click", function(){
+    inlineEdit($("apoio-valor"), state.apoioValor, function(v){ state.apoioValor = Math.max(v, 0); });
   });
   $("apoios").addEventListener("click", function(){
     inlineEdit($("apoios"), state.apoios, function(v){ state.apoios = clamp(Math.round(v), 0, 99); }, "months");
