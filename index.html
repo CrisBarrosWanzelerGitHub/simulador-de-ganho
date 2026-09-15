@@ -283,7 +283,10 @@
     .stat:last-child{border-radius:0 0 16px 16px}
     .bar-row{grid-template-columns:1fr;gap:6px}
     .client{font-size:28px}
-    .wrap{padding:28px 18px 40px}
+    .wrap{padding:28px 32px 40px}
+    .head-actions{flex-wrap:wrap;row-gap:12px}
+    .date{flex-basis:100%}
+    .btn,.date{white-space:nowrap}
     .panel,.hero{padding:22px}
   }
   @media (pointer:coarse){
@@ -515,7 +518,7 @@
     // (o valor e a quantidade também podem ser editados com um clique na proposta)
 
     // ---- Observação exibida abaixo da mensalidade ----
-    textoRegraMensalidade: "Inclui um apoio por semana, conforme o contrato.",
+    textoRegraMensalidade: "Inclui um apoio semanal, conforme o contrato.",
 
     // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "apoio" ----
     acompanhamentoPadrao: "mensalidade",
