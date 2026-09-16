@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   SIMULADOR DE FATURAMENTO
-  Para alterar preços, valores mínimos, apoio eventual, prazo do plano,
+  Para alterar preços, valores mínimos, suporte eventual, textos de apoio, prazo do plano,
   validade da proposta e e-mail de contato, procure pelo bloco
   "CONFIGURAÇÕES EDITÁVEIS", no início do script, perto do fim deste arquivo.
 -->
@@ -238,11 +238,15 @@
   .lines li > span:first-child{min-width:0}
   .lines li > .num,.lines li > .price{white-space:nowrap;flex-shrink:0}
   .viability{margin:12px 0 0;font-size:12px;color:var(--warn);text-align:center}
-  .validity{margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
+  .validity{text-wrap:balance;margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
   .plan-toggle{margin:0 0 6px;font-size:13px}
   .plan-toggle button{padding:6px 14px;font-size:13px}
-  #rec-row{flex-wrap:wrap;row-gap:0}
-  .rule-note{font-style:italic;flex-basis:100%;margin-top:1px}
+  .lines li{flex-wrap:wrap;row-gap:0}
+  .editable-hint{outline:none;border-radius:3px;cursor:text;transition:background .15s}
+  .editable-hint:hover{background:var(--paper)}
+  .editable-hint:focus{background:var(--surface);box-shadow:0 0 0 1px var(--after);color:var(--ink)}
+  .edit-input.expr{width:170px}
+  .lines li > .line-hint{flex-basis:100%;margin-top:1px}
   .line-hint{display:block;font-size:12px;color:var(--mist);margin-top:1px}
   .lines li.total{border-bottom:0;padding-top:16px}
   .lines li.total span{color:var(--ink);font-weight:600;font-size:17px}
@@ -250,7 +254,20 @@
   .price:disabled{color:var(--ink);opacity:1}
   .price{border-bottom:1px dashed var(--mist);border-radius:0;cursor:pointer}
   .price:hover{color:var(--after)}
-  .reset-row{margin-top:10px;text-align:right}
+  .reset-row{margin-top:10px;display:flex;justify-content:flex-end}
+  .reset-btn{
+    position:relative;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);
+    background:var(--surface);color:var(--after);display:inline-flex;align-items:center;justify-content:center;padding:0;
+  }
+  .reset-btn[hidden]{display:none}
+  .reset-btn svg{width:16px;height:16px}
+  .reset-btn:hover{border-color:var(--after);background:var(--after-soft)}
+  .reset-btn::after{
+    content:attr(data-tip);position:absolute;right:calc(100% + 8px);top:50%;white-space:nowrap;
+    background:var(--ink);color:var(--on-ink);font-size:12px;padding:6px 10px;border-radius:8px;
+    opacity:0;visibility:hidden;transform:translate(4px,-50%);transition:opacity .15s,transform .15s,visibility .15s;pointer-events:none;
+  }
+  .reset-btn:hover::after,.reset-btn:focus-visible::after{opacity:1;visibility:visible;transform:translate(0,-50%)}
   .lines .edit-input{font-size:15px;font-weight:400;width:130px}
   .lines .edit-input.months{width:56px}
   .net{
@@ -279,6 +296,9 @@
     .stat{grid-row:auto;grid-template-rows:none}
     .stat:first-child{border-radius:16px 16px 0 0}
     .tip-box{width:calc(100% - 32px);max-width:none}
+    .net{padding:14px 16px}
+    .net span{font-size:14px}
+    .net strong{font-size:20px}
     .stat{grid-template-columns:1fr auto;align-items:center;column-gap:16px}
     .stat .v{margin-top:0}
     .stat .k{align-self:center}
@@ -290,6 +310,12 @@
     .date{flex-basis:100%}
     .btn,.date{white-space:nowrap}
     .panel,.hero{padding:22px}
+  }
+  @media (max-width:430px){
+    .net{flex-wrap:wrap;row-gap:2px}
+    .net span{flex-basis:100%;text-wrap:balance}
+    .lines .line-hint{text-wrap:balance}
+    .net strong{margin-left:auto}
   }
   @media (pointer:coarse){
     input[type=range]{height:32px}
@@ -458,19 +484,19 @@
         <p class="hint" id="proposal-hint"></p>
         <div class="segmented plan-toggle" role="group" aria-label="Forma de acompanhamento">
           <button type="button" data-plan="mensalidade">Mensalidade</button>
-          <button type="button" data-plan="apoio">Apoio eventual</button>
+          <button type="button" data-plan="apoio">Suporte eventual</button>
         </div>
         <ul class="lines">
-          <li><span>Implementação<small class="line-hint" id="impl-hint"></small></span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button></li>
-          <li id="rec-row"><span>Mensalidade<small class="line-hint" id="rec-hint"></small></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de meses"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span><small class="line-hint rule-note" id="rec-note"></small></li>
-          <li id="apoio-row" hidden><span>Apoio eventual<small class="line-hint" id="apoio-hint"></small></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de apoios"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor de cada apoio"></button></span></li>
+          <li><span>Implementação</span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button><small class="line-hint editable-hint" id="impl-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
+          <li id="rec-row"><span>Mensalidade</span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de mensalidades"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span><small class="line-hint editable-hint" id="rec-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small><small class="line-hint rule-note editable-hint" id="rec-note" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar observação da mensalidade"></small></li>
+          <li id="apoio-row" hidden><span>Suporte eventual</span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de horas de suporte"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor da hora de suporte"></button></span><small class="line-hint editable-hint" id="apoio-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
         <div class="net">
           <span id="net-label"></span>
           <strong class="num" id="net"></strong>
         </div>
-        <div class="reset-row"><button type="button" class="link" id="reset-price" hidden></button></div>
+        <div class="reset-row"><button type="button" class="reset-btn" id="reset-price" data-tip="Restaurar cálculo padrão" aria-label="Restaurar cálculo padrão" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button></div>
         <p class="viability" id="viability" hidden></p>
         <p class="validity" id="validity"></p>
       </section>
@@ -514,19 +540,28 @@
     implementacaoMinima: 1000,
     mensalidadeMinima: 400,
 
-    // ---- Apoio eventual (alternativa à mensalidade) ----
-    valorApoioEventual: 200,         // valor de cada apoio (em R$)
-    apoiosPrevistos: 2,              // quantidade sugerida ao abrir a página
+    // ---- Suporte eventual (alternativa à mensalidade) ----
+    valorHoraSuporte: 200,           // valor de cada hora de suporte (em R$)
+    horasSuportePrevistas: 11,       // quantidade de horas sugerida ao abrir a página
     // (o valor e a quantidade também podem ser editados com um clique na proposta)
 
-    // ---- Observação exibida abaixo da mensalidade ----
-    textoRegraMensalidade: "Inclui um apoio semanal, conforme o contrato.",
+    // ---- Textos de apoio (hints) abaixo de cada item do investimento ----
+    // Implementação: deixe "" (aspas vazias) para mostrar a regra automática ("2x do ganho mensal").
+    // Mensalidade: deixe "" para não exibir texto.
+    // Todos também podem ser editados com um clique na própria página.
+    hintImplementacao: "Valor da implementação com período de garantia",
+    hintMensalidade: "",
+    hintSuporte: "Valor cobrado por hora de suporte",
 
-    // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "apoio" ----
+    // ---- Observação exibida abaixo da mensalidade ----
+    textoRegraMensalidade: "Suporte e consultoria conforme contrato",
+
+    // ---- Forma de acompanhamento que aparece ao abrir: "mensalidade" ou "suporte" ----
     acompanhamentoPadrao: "mensalidade",
 
     // ---- Plano e simulação ----
-    mesesDoPlano: 12,                // duração do plano (em meses)
+    mesesDoPlano: 12,                // período da simulação e da proposta (em meses)
+    mensalidadesPrevistas: 11,       // quantidade de mensalidades cobradas no período
     acrescimoAutomatico: 3,          // pontos % somados ao cenário "com a solução"
 
     // ---- Aviso "o projeto não se torna viável no momento" ----
@@ -552,12 +587,17 @@
     slots: 200, occA: 70, occB: 70 + CONFIG.acrescimoAutomatico,
     ticket: 300,
     months: CONFIG.mesesDoPlano,
+    parcelas: CONFIG.mensalidadesPrevistas,
     offset: CONFIG.acrescimoAutomatico,
     mult: CONFIG.multiplicadorImplementacao,
     rec: CONFIG.percentualMensalidade,
-    plan: CONFIG.acompanhamentoPadrao === "apoio" ? "apoio" : "mensalidade",
-    apoios: CONFIG.apoiosPrevistos,
-    apoioValor: CONFIG.valorApoioEventual,
+    plan: (CONFIG.acompanhamentoPadrao === "suporte" || CONFIG.acompanhamentoPadrao === "apoio") ? "apoio" : "mensalidade",
+    apoios: CONFIG.horasSuportePrevistas,
+    apoioValor: CONFIG.valorHoraSuporte,
+    implHint: null,   // textos editados na página (null = usa o padrão)
+    recHint: null,
+    supHint: null,
+    recNote: null,
     implManual: null, // preço fixo definido à mão
     recManual: null
   };
@@ -625,11 +665,58 @@
   }
 
   /* ------- Edição com um clique ------- */
-  function inlineEdit(btn, current, onCommit, extraClass){
+  // Aceita contas simples nos valores de preço, como 500*1,20 ou (300+200)*2
+  function evalExpr(str){
+    var s = String(str).replace(/R\$/gi, "").replace(/[×xX]/g, "*").replace(/÷/g, "/").replace(/\s+/g, "");
+    if (!s || !/^[\d.,+\-*\/()]+$/.test(s)) return null;
+    var tokens = [], re = /(\d[\d.,]*)|([+\-*\/()])/g, m, pos = 0;
+    while ((m = re.exec(s))){
+      if (m.index !== pos) return null;
+      pos = re.lastIndex;
+      if (m[1] !== undefined){ var n = parseNum(m[1]); if (n === null) return null; tokens.push({ n: n }); }
+      else tokens.push({ o: m[2] });
+    }
+    if (pos !== s.length) return null;
+    var i = 0;
+    function peek(){ return tokens[i]; }
+    function factor(){
+      var t = tokens[i++];
+      if (!t) throw 0;
+      if (t.o === "-") return -factor();
+      if (t.o === "+") return factor();
+      if (t.o === "("){ var v = expr(); if (!peek() || peek().o !== ")") throw 0; i++; return v; }
+      if (t.n === undefined) throw 0;
+      return t.n;
+    }
+    function term(){
+      var v = factor();
+      while (peek() && (peek().o === "*" || peek().o === "/")){
+        var op = tokens[i++].o, r = factor();
+        if (op === "/" && r === 0) throw 0;
+        v = op === "*" ? v * r : v / r;
+      }
+      return v;
+    }
+    function expr(){
+      var v = term();
+      while (peek() && (peek().o === "+" || peek().o === "-")){
+        var op = tokens[i++].o, r = term();
+        v = op === "+" ? v + r : v - r;
+      }
+      return v;
+    }
+    try {
+      var result = expr();
+      if (i !== tokens.length || !isFinite(result)) return null;
+      return Math.round(result * 100) / 100;
+    } catch (e) { return null; }
+  }
+
+  function inlineEdit(btn, current, onCommit, extraClass, allowExpr){
     var field = document.createElement("input");
     field.type = "text";
-    field.inputMode = "decimal";
-    field.className = "edit-input num" + (extraClass ? " " + extraClass : "");
+    field.inputMode = allowExpr ? "text" : "decimal";
+    field.className = "edit-input num" + (extraClass ? " " + extraClass : "") + (allowExpr ? " expr" : "");
     field.value = n2.format(current);
     field.setAttribute("aria-label", btn.getAttribute("aria-label") || "Editar valor");
     btn.replaceWith(field);
@@ -638,7 +725,7 @@
     var done = false;
     function commit(save){
       if (done) return; done = true;
-      if (save){ var v = parseNum(field.value); if (v !== null) onCommit(v); }
+      if (save){ var v = allowExpr ? evalExpr(field.value) : parseNum(field.value); if (v !== null) onCommit(v); }
       field.replaceWith(btn);
       update();
       btn.focus();
@@ -735,7 +822,7 @@
     var impl = s.implManual !== null ? s.implManual : Math.max(implAuto, CONFIG.implementacaoMinima);
     var recM = s.recManual !== null ? s.recManual : Math.max(recAuto, CONFIG.mensalidadeMinima);
     var apoioTotal = s.apoios * s.apoioValor;
-    var invest = isApoio ? impl + apoioTotal : impl + recM * s.months;
+    var invest = isApoio ? impl + apoioTotal : impl + recM * s.parcelas;
     var annual = impM * s.months;
     var net = annual - invest;
     return {
@@ -823,12 +910,12 @@
     $("invest").textContent = money(c.invest);
     $("net").textContent = money(c.net);
 
-    $("months").textContent = n0.format(m);
+    $("months").textContent = n0.format(state.parcelas);
     $("hero-label").textContent = "Faturamento adicional em " + mTxt;
     $("roi-period").textContent = "em " + mTxt;
     var isApoio = state.plan === "apoio";
     $("proposal-hint").textContent = isApoio
-      ? "Implementação única e apoio eventual conforme a necessidade, em " + mTxt + "."
+      ? "Implementação única e suporte eventual conforme a necessidade, em " + mTxt + "."
       : "Implementação única e acompanhamento mensal por " + mTxt + ".";
     document.querySelectorAll(".plan-toggle button").forEach(function(b){
       b.setAttribute("aria-pressed", String(b.dataset.plan === state.plan));
@@ -837,24 +924,41 @@
     $("apoio-row").hidden = !isApoio;
     $("apoios").textContent = n0.format(state.apoios);
     $("apoio-valor").textContent = money(state.apoioValor);
-    $("rec-note").textContent = CONFIG.textoRegraMensalidade;
-    $("rec-note").hidden = !CONFIG.textoRegraMensalidade;
-    $("apoio-hint").textContent = "Previsão de apoios, cobrados somente quando utilizados";
+    var noteText = state.recNote !== null ? state.recNote : CONFIG.textoRegraMensalidade;
+    setHint("rec-note", noteText, !noteText);
+    setHint("apoio-hint", state.supHint || CONFIG.hintSuporte || "Valor por hora de suporte", false);
     $("payback-label").textContent = isApoio
       ? "Prazo de retorno, já incluídos os suportes"
       : "Prazo de retorno, já descontada a mensalidade";
     $("total-label").textContent = "Total em " + mTxt;
     $("net-label").textContent = "Ganho no faturamento em " + mTxt;
-    $("reset-price").hidden = state.implManual === null && (isApoio || state.recManual === null);
-    $("reset-price").textContent = "Usar preço proporcional ao ganho";
-    $("impl-hint").textContent = c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x do ganho mensal";
-    $("rec-hint").textContent = c.recMin ? "Valor mínimo de mensalidade" : n1.format(state.rec) + "% do ganho mensal";
+    $("reset-price").hidden = isDefaultProposal();
+    var implCustom = state.implHint || CONFIG.hintImplementacao;
+    var recCustom = state.recHint || CONFIG.hintMensalidade;
+    setHint("impl-hint",
+      implCustom || (c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x do ganho mensal"),
+      !implCustom && state.implManual !== null);
+    setHint("rec-hint", recCustom || "", !recCustom);
     var minApplied = c.implMin || c.recMin;
     var showViability = c.impM > 0 && minApplied && (CONFIG.avisarSempreQueMinimoForAplicado || c.net <= 0);
     $("viability").textContent = CONFIG.textoAvisoViabilidade;
     $("viability").hidden = !showViability;
-    $("impl-hint").hidden = state.implManual !== null;
-    $("rec-hint").hidden = state.recManual !== null;
+  }
+
+  // A proposta está nos parâmetros padrão?
+  function isDefaultProposal(){
+    return state.implManual === null && state.recManual === null &&
+      state.parcelas === CONFIG.mensalidadesPrevistas &&
+      state.apoios === CONFIG.horasSuportePrevistas &&
+      state.apoioValor === CONFIG.valorHoraSuporte &&
+      state.implHint === null && state.recHint === null && state.supHint === null && state.recNote === null;
+  }
+
+  // Atualiza um hint sem atrapalhar quem está editando
+  function setHint(id, text, hide){
+    var el = $(id);
+    if (document.activeElement !== el) el.textContent = text;
+    el.hidden = !!hide;
   }
 
   /* ------- Geração de PDF sem dependências ------- */
@@ -1046,17 +1150,17 @@
     pg.text($("proposal-hint").textContent, rx + rp, iy, "H", 7.5, PC.stone);
     iy += 8;
     var rows = [
-      ["Implementação", money(c.impl), state.implManual === null ? $("impl-hint").textContent : ""],
+      ["Implementação", money(c.impl), $("impl-hint").hidden ? "" : $("impl-hint").textContent],
       state.plan === "apoio"
-        ? ["Apoio eventual", n0.format(state.apoios) + " × " + money(state.apoioValor), $("apoio-hint").textContent]
-        : ["Mensalidade", n0.format(m) + " × " + money(c.recM), state.recManual === null ? $("rec-hint").textContent : "", CONFIG.textoRegraMensalidade]
+        ? ["Suporte eventual", n0.format(state.apoios) + " × " + money(state.apoioValor), $("apoio-hint").textContent]
+        : ["Mensalidade", n0.format(state.parcelas) + " × " + money(c.recM), $("rec-hint").hidden ? "" : $("rec-hint").textContent, $("rec-note").hidden ? "" : $("rec-note").textContent]
     ];
     rows.forEach(function(r){
       iy += 16;
       pg.text(r[0], rx + rp, iy, "H", 9, PC.stone);
       pg.text(r[1], R - rp, iy, "H", 9, PC.ink, "right");
       if (r[2]){ iy += 10; pg.text(r[2], rx + rp, iy, "H", 6.8, PC.mist); }
-      if (r[3]){ iy += 9; pg.text(r[3], rx + rp, iy, "H", 6.8, PC.stone); }
+      if (r[3]){ iy += r[2] ? 9 : 10; pg.text(r[3], rx + rp, iy, "H", 6.8, PC.mist); }
       iy += 8;
       pg.line(rx + rp, iy, R - rp, iy, PC.line);
     });
@@ -1094,16 +1198,34 @@
 
   /* ------- Preço manual ------- */
   $("impl").addEventListener("click", function(){
-    inlineEdit($("impl"), Math.round(compute(state).impl), function(v){ state.implManual = Math.max(v, 0); });
+    inlineEdit($("impl"), Math.round(compute(state).impl), function(v){ state.implManual = Math.max(v, 0); }, "", true);
   });
   $("months").addEventListener("click", function(){
-    inlineEdit($("months"), state.months, function(v){ state.months = clamp(Math.round(v), 1, 120); }, "months");
+    inlineEdit($("months"), state.parcelas, function(v){ state.parcelas = clamp(Math.round(v), 1, 120); }, "months");
   });
   $("rec").addEventListener("click", function(){
-    inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); });
+    inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); }, "", true);
   });
+  [["impl-hint", "implHint"], ["rec-hint", "recHint"], ["apoio-hint", "supHint"], ["rec-note", "recNote"]].forEach(function(pair){
+    var el = $(pair[0]), key = pair[1];
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === "Escape"){ e.preventDefault(); el.blur(); }
+    });
+    el.addEventListener("paste", function(e){
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData("text").replace(/\s+/g, " ");
+      document.execCommand("insertText", false, text);
+    });
+    el.addEventListener("blur", function(){
+      var text = el.textContent.replace(/\s+/g, " ").trim();
+      if (key === "recNote") state.recNote = text === CONFIG.textoRegraMensalidade ? null : text;
+      else state[key] = text || null;
+      update();
+    });
+  });
+
   $("apoio-valor").addEventListener("click", function(){
-    inlineEdit($("apoio-valor"), state.apoioValor, function(v){ state.apoioValor = Math.max(v, 0); });
+    inlineEdit($("apoio-valor"), state.apoioValor, function(v){ state.apoioValor = Math.max(v, 0); }, "", true);
   });
   $("apoios").addEventListener("click", function(){
     inlineEdit($("apoios"), state.apoios, function(v){ state.apoios = clamp(Math.round(v), 0, 99); }, "months");
@@ -1116,7 +1238,12 @@
   emailEl.href = "mailto:" + CONFIG.emailContato;
 
   $("reset-price").addEventListener("click", function(){
-    state.implManual = null; state.recManual = null; update();
+    state.implManual = null; state.recManual = null;
+    state.parcelas = CONFIG.mensalidadesPrevistas;
+    state.apoios = CONFIG.horasSuportePrevistas;
+    state.apoioValor = CONFIG.valorHoraSuporte;
+    state.implHint = state.recHint = state.supHint = state.recNote = null;
+    update();
   });
 
   /* ------- Seletor de modelo ------- */
