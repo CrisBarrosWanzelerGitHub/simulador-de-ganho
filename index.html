@@ -135,8 +135,8 @@
   .control{margin-bottom:26px}
   .control:last-child{margin-bottom:0}
   .control-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
-  .control label{font-size:14px;color:var(--ink)}
-  .control .sub{display:block;font-size:12px;color:var(--mist)}
+  .control label{font-size:14px;color:var(--ink);text-wrap:balance}
+  .control .sub{display:block;text-wrap:balance;font-size:12px;color:var(--mist)}
   .value{
     font-size:17px;font-weight:600;border:0;background:transparent;color:var(--ink);
     padding:2px 6px;margin-right:-6px;border-radius:6px 6px 0 0;
@@ -634,12 +634,12 @@
   var defs = [
     {key:"leads", models:["conv"], label:"Oportunidades por mês", sub:"Contatos, leads ou orçamentos", min:10, max:5000, step:10, f:"int"},
 
-    {key:"convA", models:["conv"], label:"Conversão atual", sub:"De cada 100 oportunidades, quantas fecham", min:1, max:100, step:0.5, f:"pct"},
-    {key:"convB", models:["conv"], label:"Conversão com a solução", min:1, max:100, step:0.5, f:"pct", after:true},
+    {key:"convA", models:["conv"], label:"Conversão atual", sub:function(){ return "Hoje: " + qtdText(compute(state).uA); }, min:1, max:100, step:0.5, f:"pct"},
+    {key:"convB", models:["conv"], label:"Conversão com a solução", sub:function(){ return "Estimativa: " + qtdText(compute(state).uB); }, min:1, max:100, step:0.5, f:"pct", after:true},
 
     {key:"slots", models:["agenda"], label:"Horários disponíveis por mês", sub:"Capacidade total da agenda", min:10, max:5000, step:10, f:"int"},
-    {key:"occA", models:["agenda"], label:"Horários preenchidos hoje", sub:"Considerando faltas e horários vagos", min:1, max:100, step:1, f:"pct"},
-    {key:"occB", models:["agenda"], label:"Horários preenchidos com a solução", min:1, max:100, step:1, f:"pct", after:true},
+    {key:"occA", models:["agenda"], label:"Horários preenchidos hoje", sub:function(){ return "Hoje: " + qtdText(compute(state).uA); }, min:1, max:100, step:1, f:"pct"},
+    {key:"occB", models:["agenda"], label:"Horários preenchidos com a solução", sub:function(){ return "Estimativa: " + qtdText(compute(state).uB); }, min:1, max:100, step:1, f:"pct", after:true},
 
     {key:"ticket", models:["conv","agenda"], label:{conv:"Ticket médio", agenda:"Valor médio por atendimento"},
       min:50, max:5000, step:10, f:"money", dividerIn:["conv","agenda"]}
@@ -737,7 +737,16 @@
     field.addEventListener("blur", function(){ commit(true); });
   }
 
-  function byModel(v){ return (v && typeof v === "object") ? v[state.model] : v; }
+  function byModel(v){
+    if (typeof v === "function") return v();
+    return (v && typeof v === "object") ? v[state.model] : v;
+  }
+  // Quantidade mensal para os textos de apoio dos controles
+  function qtdText(v){
+    var r = Math.round(v * 10) / 10;
+    var word = state.model === "conv" ? (r === 1 ? "fechamento" : "fechamentos") : (r === 1 ? "atendimento" : "atendimentos");
+    return n1.format(r) + " " + word + " por mês";
+  }
 
   function build(d, parent){
     var divider = null;
