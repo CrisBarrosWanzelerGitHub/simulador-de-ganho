@@ -108,7 +108,7 @@
   .solution{color:var(--stone);font-size:16px;margin:6px 0 0}
   .head-actions{display:flex;gap:10px;align-items:center}
   .date{color:var(--mist);font-size:13px}
-  button{font:inherit;cursor:pointer}
+  button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .btn{background:var(--ink);color:var(--on-ink);border:0;border-radius:999px;padding:10px 18px;font-size:14px}
   .btn:hover{opacity:.85}
   .icon-btn{
@@ -237,7 +237,6 @@
   .lines li > span:first-child{color:var(--stone)}
   .lines li > span:first-child{min-width:0}
   .lines li > .num,.lines li > .price{white-space:nowrap;flex-shrink:0}
-  .viability{margin:12px 0 0;font-size:12px;color:var(--warn);text-align:center}
   .validity{text-wrap:balance;margin:14px 0 0;font-size:13px;color:var(--stone);text-align:center}
   .plan-toggle{margin:0 0 6px;font-size:13px}
   .plan-toggle button{padding:6px 14px;font-size:13px}
@@ -399,7 +398,6 @@
     .net{margin-top:10px;padding:10px 14px}
     .net strong{font-size:17px}
     .validity{margin-top:8px;font-size:10px}
-    .viability{margin-top:6px;font-size:9.5px}
     footer{margin-top:14px;font-size:9.5px;max-width:none}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact;transition:none!important}
   }
@@ -497,7 +495,6 @@
           <strong class="num" id="net"></strong>
         </div>
         <div class="reset-row"><button type="button" class="reset-btn" id="reset-price" data-tip="Restaurar cálculo padrão" aria-label="Restaurar cálculo padrão" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button></div>
-        <p class="viability" id="viability" hidden></p>
         <p class="validity" id="validity"></p>
       </section>
     </main>
@@ -563,12 +560,6 @@
     mesesDoPlano: 12,                // período da simulação e da proposta (em meses)
     mensalidadesPrevistas: 11,       // quantidade de mensalidades cobradas no período
     acrescimoAutomatico: 3,          // pontos % somados ao cenário "com a solução"
-
-    // ---- Aviso "o projeto não se torna viável no momento" ----
-    //   true  = sempre que algum valor mínimo for aplicado
-    //   false = somente quando, com os mínimos, o investimento supera o ganho do período
-    avisarSempreQueMinimoForAplicado: true,
-    textoAvisoViabilidade: "Com os números atuais, os valores proporcionais ficam abaixo do mínimo do projeto. Por isso, ele não se torna viável no momento.",
 
     // ---- Proposta ----
     validadeDias: 30,                // prazo de validade (em dias)
@@ -948,10 +939,6 @@
       implCustom || (c.implMin ? "Valor mínimo de implementação" : n1.format(state.mult) + "x do ganho mensal"),
       !implCustom && state.implManual !== null);
     setHint("rec-hint", recCustom || "", !recCustom);
-    var minApplied = c.implMin || c.recMin;
-    var showViability = c.impM > 0 && minApplied && (CONFIG.avisarSempreQueMinimoForAplicado || c.net <= 0);
-    $("viability").textContent = CONFIG.textoAvisoViabilidade;
-    $("viability").hidden = !showViability;
   }
 
   // A proposta está nos parâmetros padrão?
@@ -1181,13 +1168,6 @@
     pg.text("Ganho no faturamento em " + mTxt, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
     pg.text(money(c.net), R - rp - 12, iy + 20.5, "HB", 13, PC.after, "right");
     iy += 32 + 16;
-    if (!$("viability").hidden){
-      wrapText($("viability").textContent, "H", 7, rw - rp * 2).forEach(function(t){
-        pg.text(t, rx + rw / 2, iy - 4, "H", 7, "#8A5A2B", "center");
-        iy += 9;
-      });
-      iy += 3;
-    }
     pg.text($("validity").textContent, rx + rw / 2, iy, "H", 7.5, PC.stone, "center");
     iy += 12;
     pg.rrect(rx, iTop, rw, iy - iTop, 8, null, PC.line);
