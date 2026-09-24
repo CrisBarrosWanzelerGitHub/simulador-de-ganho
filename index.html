@@ -485,9 +485,9 @@
           <button type="button" data-plan="apoio">Suporte eventual</button>
         </div>
         <ul class="lines">
-          <li><span>Implementação</span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button><small class="line-hint editable-hint" id="impl-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
-          <li id="rec-row"><span>Mensalidade</span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de mensalidades"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span><small class="line-hint editable-hint" id="rec-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small><small class="line-hint rule-note editable-hint" id="rec-note" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar observação da mensalidade"></small></li>
-          <li id="apoio-row" hidden><span>Suporte eventual</span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de horas de suporte"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor da hora de suporte"></button></span><small class="line-hint editable-hint" id="apoio-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
+          <li><span class="editable-hint" id="impl-label" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar descrição do serviço"></span><button type="button" class="price num" id="impl" aria-label="Editar implementação"></button><small class="line-hint editable-hint" id="impl-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
+          <li id="rec-row"><span class="editable-hint" id="rec-label" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar descrição do serviço"></span><span class="num"><button type="button" class="price num" id="months" aria-label="Editar quantidade de mensalidades"></button> × <button type="button" class="price num" id="rec" aria-label="Editar mensalidade"></button></span><small class="line-hint editable-hint" id="rec-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small><small class="line-hint rule-note editable-hint" id="rec-note" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar observação da mensalidade"></small></li>
+          <li id="apoio-row" hidden><span class="editable-hint" id="apoio-label" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar descrição do serviço"></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de horas de suporte"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor da hora de suporte"></button></span><small class="line-hint editable-hint" id="apoio-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
         <div class="net">
@@ -546,6 +546,11 @@
     // Implementação: deixe "" (aspas vazias) para mostrar a regra automática ("2x do ganho mensal").
     // Mensalidade: deixe "" para não exibir texto.
     // Todos também podem ser editados com um clique na própria página.
+    // ---- Descrições dos serviços na proposta (também editáveis com um clique) ----
+    descricaoImplementacao: "Implementação",
+    descricaoMensalidade: "Mensalidade",
+    descricaoSuporte: "Suporte eventual",
+
     hintImplementacao: "Valor da implementação com período de garantia",
     hintMensalidade: "",
     hintSuporte: "Valor cobrado por hora de suporte",
@@ -585,7 +590,10 @@
     plan: (CONFIG.acompanhamentoPadrao === "suporte" || CONFIG.acompanhamentoPadrao === "apoio") ? "apoio" : "mensalidade",
     apoios: CONFIG.horasSuportePrevistas,
     apoioValor: CONFIG.valorHoraSuporte,
-    implHint: null,   // textos editados na página (null = usa o padrão)
+    implLabel: null,  // descrições e textos editados na página (null = usa o padrão)
+    recLabel: null,
+    supLabel: null,
+    implHint: null,
     recHint: null,
     supHint: null,
     recNote: null,
@@ -933,6 +941,9 @@
     $("total-label").textContent = "Total em " + mTxt;
     $("net-label").textContent = "Ganho no faturamento em " + mTxt;
     $("reset-price").hidden = isDefaultProposal();
+    setHint("impl-label", state.implLabel || CONFIG.descricaoImplementacao, false);
+    setHint("rec-label", state.recLabel || CONFIG.descricaoMensalidade, false);
+    setHint("apoio-label", state.supLabel || CONFIG.descricaoSuporte, false);
     var implCustom = state.implHint || CONFIG.hintImplementacao;
     var recCustom = state.recHint || CONFIG.hintMensalidade;
     setHint("impl-hint",
@@ -947,6 +958,7 @@
       state.parcelas === CONFIG.mensalidadesPrevistas &&
       state.apoios === CONFIG.horasSuportePrevistas &&
       state.apoioValor === CONFIG.valorHoraSuporte &&
+      state.implLabel === null && state.recLabel === null && state.supLabel === null &&
       state.implHint === null && state.recHint === null && state.supHint === null && state.recNote === null;
   }
 
@@ -1146,10 +1158,10 @@
     pg.text($("proposal-hint").textContent, rx + rp, iy, "H", 7.5, PC.stone);
     iy += 8;
     var rows = [
-      ["Implementação", money(c.impl), $("impl-hint").hidden ? "" : $("impl-hint").textContent],
+      [$("impl-label").textContent, money(c.impl), $("impl-hint").hidden ? "" : $("impl-hint").textContent],
       state.plan === "apoio"
-        ? ["Suporte eventual", n0.format(state.apoios) + " × " + money(state.apoioValor), $("apoio-hint").textContent]
-        : ["Mensalidade", n0.format(state.parcelas) + " × " + money(c.recM), $("rec-hint").hidden ? "" : $("rec-hint").textContent, $("rec-note").hidden ? "" : $("rec-note").textContent]
+        ? [$("apoio-label").textContent, n0.format(state.apoios) + " × " + money(state.apoioValor), $("apoio-hint").textContent]
+        : [$("rec-label").textContent, n0.format(state.parcelas) + " × " + money(c.recM), $("rec-hint").hidden ? "" : $("rec-hint").textContent, $("rec-note").hidden ? "" : $("rec-note").textContent]
     ];
     rows.forEach(function(r){
       iy += 16;
@@ -1195,7 +1207,7 @@
   $("rec").addEventListener("click", function(){
     inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); }, "", true);
   });
-  [["impl-hint", "implHint"], ["rec-hint", "recHint"], ["apoio-hint", "supHint"], ["rec-note", "recNote"]].forEach(function(pair){
+  [["impl-label", "implLabel"], ["rec-label", "recLabel"], ["apoio-label", "supLabel"], ["impl-hint", "implHint"], ["rec-hint", "recHint"], ["apoio-hint", "supHint"], ["rec-note", "recNote"]].forEach(function(pair){
     var el = $(pair[0]), key = pair[1];
     el.addEventListener("keydown", function(e){
       if (e.key === "Enter" || e.key === "Escape"){ e.preventDefault(); el.blur(); }
@@ -1231,6 +1243,7 @@
     state.parcelas = CONFIG.mensalidadesPrevistas;
     state.apoios = CONFIG.horasSuportePrevistas;
     state.apoioValor = CONFIG.valorHoraSuporte;
+    state.implLabel = state.recLabel = state.supLabel = null;
     state.implHint = state.recHint = state.supHint = state.recNote = null;
     update();
   });
