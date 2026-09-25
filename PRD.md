@@ -13,7 +13,7 @@
 | Repositório | github.com/CrisBarrosWanzelerGitHub/simulador-de-ganho |
 | Tags | simulador, ROI, proposta comercial, automação, UX, HTML, sem dependências |
 | Status | Em produção |
-| Última atualização | 24 de setembro de 2026 (descrições dos serviços editáveis) |
+| Última atualização | 25 de setembro de 2026 (nova simulação, escala dos deslizantes e textos editáveis) |
 
 ---
 
@@ -77,8 +77,12 @@ Ao mover o valor atual (conversão ou horários preenchidos), o valor com a solu
 **Aceitação:** com acréscimo de 3, mover a conversão atual para 20% posiciona a conversão com a solução em 23%. O valor com a solução continua ajustável isoladamente.
 
 ### RF-03b · Quantidades nos textos de apoio dos controles
-Abaixo dos controles percentuais, o texto de apoio mostra a quantidade mensal resultante: "Hoje: X" no valor atual e "Estimativa: Y" no valor com a solução.
+Abaixo dos controles percentuais, o texto de apoio mostra a quantidade mensal resultante, sempre em número inteiro: "Hoje: X" no valor atual e "Estimativa: Y" no valor com a solução.
 **Aceitação:** com os valores iniciais, "Conversão atual" mostra "Hoje: 30 fechamentos por mês" e "Conversão com a solução" mostra "Estimativa: 39 fechamentos por mês". Na aba Agenda cheia, os textos mostram "Hoje: 140 atendimentos por mês" e "Estimativa: 146 atendimentos por mês". Os textos se atualizam a cada mudança e também aparecem no PDF.
+
+### RF-03c · Piso do cenário com a solução
+O valor com a solução nunca fica abaixo do valor atual, nem pelo deslizante nem por digitação.
+**Aceitação:** com "Horários preenchidos hoje" em 65%, tentar definir 50% em "Horários preenchidos com a solução" resulta em 65%. Os dois deslizantes mantêm a mesma escala, para que o cenário com a solução apareça sempre à frente do atual.
 
 ### RF-04 · Resultado principal e comparação
 Exibe o faturamento adicional no período, o ganho mensal e barras comparando "Hoje" e "Com a solução".
@@ -98,15 +102,19 @@ Seletor entre "Mensalidade" e "Suporte eventual".
 
 ### RF-08 · Preços, quantidades e contas editáveis
 Implementação, mensalidade, valor da hora de suporte, quantidade de mensalidades e quantidade de horas são editáveis com um clique. Os campos de preço aceitam contas.
-**Aceitação:** digitar `500*1,20` na implementação resulta em R$ 600; uma conta inválida mantém o valor anterior.
+**Aceitação:** digitar `500*1,20` na implementação resulta em R$ 600; uma conta inválida mantém o valor anterior. Nos controles percentuais, digitar `56/80` resulta em 70%.
 
 ### RF-09 · Descrições e textos de apoio editáveis
-As descrições dos serviços ("Implementação", "Mensalidade" e "Suporte eventual"), os hints da implementação, da mensalidade e do suporte, além da observação da mensalidade, são editáveis na página.
+As descrições dos serviços ("Implementação", "Mensalidade" e "Suporte eventual"), os hints da implementação, da mensalidade e do suporte, a observação da mensalidade, o texto abaixo de "Investimento" e a validade da proposta são editáveis na página.
 **Aceitação:** trocar "Implementação" por "Setup e integração com o CRM" atualiza a linha na tela e no PDF daquela proposta. Apagar todo o texto de uma descrição ou de um hint restaura o padrão.
+
+### RF-09b · Nova simulação
+Ícone no rodapé do painel "Personalização total", com a dica "Começar nova simulação", que zera apenas os controles da simulação, após confirmação.
+**Aceitação:** o clique abre a confirmação "Começar uma nova simulação?"; ao confirmar, voltam ao padrão os controles das duas abas e as faixas editadas. Preços, quantidades e textos da proposta permanecem como estavam. Cancelar mantém tudo como está.
 
 ### RF-10 · Restauração do cálculo padrão
 Ícone circular com a dica "Restaurar cálculo padrão".
-**Aceitação:** o ícone só aparece quando alguma descrição, preço, quantidade ou texto foi alterado; o clique devolve esses itens aos valores do `CONFIG`, sem alterar os controles deslizantes nem a aba.
+**Aceitação:** o ícone só aparece quando alguma descrição, preço, quantidade ou texto do investimento foi alterado; o clique devolve apenas esses itens aos valores do `CONFIG`, sem alterar os controles deslizantes nem a aba.
 
 ### RF-11 · Valores mínimos sem aviso
 Quando o preço proporcional fica abaixo de um mínimo, a proposta usa o valor mínimo, sem exibir aviso, para deixar a negociação livre (ver RN-07).
@@ -151,13 +159,15 @@ O botão "Salvar em PDF" pede o nome da pessoa cliente e gera a proposta.
 | RN-14 | **Crescimento do faturamento mensal** = ganho mensal ÷ faturamento de hoje × 100 |
 | RN-15 | Se o ganho mensal for zero ou negativo, os resultados ficam esmaecidos e aparece o pedido para ajustar os valores |
 | RN-16 | Ao mover o valor atual, o valor com a solução passa a ser o atual + `acrescimoAutomatico`, limitado a 100% |
+| RN-16b | O valor com a solução nunca é menor que o valor atual: ao tentar reduzir além disso, ele permanece igual ao atual. Os dois controles mantêm a mesma escala visual |
 | RN-17 | Percentuais ficam sempre entre 0% e 100% |
 | RN-18 | Valor digitado fora da faixa amplia a faixa: abaixo do mínimo vira o novo mínimo; acima do máximo vira o novo máximo |
-| RN-19 | Contas nos preços aceitam `+`, `-`, `*` (ou `x`, `×`), `/` e parênteses, com números no formato brasileiro; o resultado é arredondado para 2 casas decimais; divisão por zero é recusada |
+| RN-19b | Nos controles percentuais, uma conta cujo resultado fica entre 0 e 1 é lida como fração e convertida em percentual (`56/80` vira 70%); valores acima de 1 são usados como estão (`56/80*100` também vira 70%) |
+| RN-19 | Contas nos preços e nos controles aceitam `+`, `-`, `*` (ou `x`, `×`), `/` e parênteses, com números no formato brasileiro; o resultado é arredondado para 2 casas decimais; divisão por zero é recusada |
 | RN-20 | Prazo de retorno abaixo de 1 mês aparece como "menos de 1 mês"; sem retorno possível, aparece "Não se aplica" |
 | RN-21 | **Nome do PDF:** "[nome da pessoa cliente] - Simulador [Venda Mais ou Agenda Cheia].pdf", sem os caracteres `\ / : * ? " < > \|` |
 | RN-22 | **Subtítulo do PDF:** "Soluções Venda Mais" ou "Soluções Agenda Cheia", conforme a aba ativa |
-| RN-23 | **Quantidade nos textos de apoio:** arredondada para 1 casa decimal; "fechamento" na aba Mais vendas e "atendimento" na aba Agenda cheia, no singular apenas quando o valor é exatamente 1 |
+| RN-23 | **Quantidade nos textos de apoio e nas barras:** arredondada para o número inteiro mais próximo; "fechamento" na aba Mais vendas e "atendimento" na aba Agenda cheia, no singular apenas quando o valor é exatamente 1 |
 
 ---
 
@@ -228,6 +238,8 @@ Os valores iniciais do painel vêm do `CONFIG`. Alterações no painel valem ape
 | Descrição da implementação | "Implementação" | Uma linha de texto simples | Não |
 | Descrição da mensalidade | "Mensalidade" | Uma linha de texto simples | Não |
 | Descrição do suporte eventual | "Suporte eventual" | Uma linha de texto simples | Não |
+| Texto abaixo de "Investimento" | Gerado conforme o modo e o período | Uma linha de texto simples | Não |
+| Validade da proposta | "Proposta válida por 30 dias, até [data]" | Uma linha de texto simples | Não |
 | Hints e observação | Textos do `CONFIG` | Uma linha de texto simples | Não |
 
 ### 6.5 Estado interno da página (não persistido)
@@ -245,6 +257,7 @@ Os valores iniciais do painel vêm do `CONFIG`. Alterações no painel valem ape
 | `apoios`, `apoioValor` | Horas e valor da hora de suporte |
 | `implManual`, `recManual` | Preços digitados (`null` = proporcional) |
 | `implLabel`, `recLabel`, `supLabel` | Descrições dos serviços editadas (`null` = padrão) |
+| `proposalHint`, `validityText` | Texto do investimento e validade editados (`null` = padrão) |
 | `implHint`, `recHint`, `supHint`, `recNote` | Textos editados (`null` = padrão) |
 
 ### 6.6 Quando os valores mínimos entram em ação (com o `CONFIG` atual)
@@ -385,6 +398,9 @@ Nenhum aviso é exibido nesses casos.
 | Mínimos de R$ 1.000 e R$ 400, com aviso discreto | Evitar propostas inviáveis |
 | Remoção do aviso de inviabilidade, mantendo os mínimos | Deixar a plataforma mais livre para negociação |
 | Descrições dos serviços editáveis na proposta | Permitir apresentar qualquer serviço, sem alterar o código |
+| Contas nos controles percentuais e quantidades inteiras | Refletir a realidade da operação (56 de 80 horários, sem meio atendimento) |
+| Mesma escala nos dois deslizantes do par | Evitar a leitura equivocada de que o cenário com a solução seria menor |
+| Dois resets independentes: simulação e investimento | Cada card controla apenas os próprios valores, evitando perder ajustes de preço ao zerar a simulação |
 | Suporte eventual cobrado por hora (11 × R$ 200) | Alternativa à mensalidade |
 | 11 mensalidades em um período de 12 meses | Período de análise separado da quantidade cobrada |
 | PDF próprio, com compartilhamento no celular | Resultado igual em qualquer aparelho e envio direto pelo canal preferido |

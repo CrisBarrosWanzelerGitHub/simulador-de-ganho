@@ -81,7 +81,7 @@
   .ident{min-width:0}
   .print-only{display:none}
   .contact{margin-top:6px}
-  .contact + .contact{margin-top:2px}
+  .contact + .contact{margin-top:18px}
   .contact a{color:var(--stone)}
   .for-client{display:none;margin:8px 0 0;font-size:16px;color:var(--ink)}
   .for-client strong{font-weight:600}
@@ -127,7 +127,7 @@
 
   /* Grade principal */
   .grid{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:28px;align-items:start}
-  .panel{background:var(--surface);border-radius:16px;padding:28px}
+  .panel{background:var(--surface);border-radius:16px;padding:32px}
   .panel h2{font-size:15px;font-weight:600;margin:0 0 4px}
   .panel .hint{color:var(--stone);font-size:13px;margin:0 0 24px}
 
@@ -169,7 +169,7 @@
   input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--fill)}
   input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
   .control.pair-after input[type=range]{--fill:var(--after)}
-  .range-ends{display:flex;justify-content:space-between;margin-top:4px}
+  .range-ends{display:flex;justify-content:space-between;margin-top:-4px}
   .end{
     border:0;background:transparent;color:var(--mist);font-size:11px;padding:1px 3px;margin:0 -3px;border-radius:4px;
   }
@@ -253,7 +253,7 @@
   .price:disabled{color:var(--ink);opacity:1}
   .price{border-bottom:1px dashed var(--mist);border-radius:0;cursor:pointer}
   .price:hover{color:var(--after)}
-  .reset-row{margin-top:10px;display:flex;justify-content:flex-end}
+  .reset-row{margin-top:24px;display:flex;justify-content:flex-end}
   .reset-btn{
     position:relative;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);
     background:var(--surface);color:var(--after);display:inline-flex;align-items:center;justify-content:center;padding:0;
@@ -308,7 +308,7 @@
     .head-actions{flex-wrap:wrap;row-gap:12px}
     .date{flex-basis:100%}
     .btn,.date{white-space:nowrap}
-    .panel,.hero{padding:22px}
+    .panel,.hero{padding:24px}
   }
   @media (max-width:430px){
     .net{flex-wrap:wrap;row-gap:2px}
@@ -344,7 +344,7 @@
     }
     html,body{background:#fff;font-size:12px}
     .wrap{padding:0;max-width:none}
-    .js-off,.icon-btn,.pdf-status,.btn,.segmented,.config,.range-ends,.tip-box,.reset-row,.notice{display:none!important}
+    .js-off,.icon-btn,.pdf-status,.btn,.segmented,.config,.range-ends,.tip-box,.reset-row,.reset-btn,.notice{display:none!important}
     header{margin-bottom:18px;flex-wrap:nowrap}
     .client{font-size:26px}
     .solution{font-size:13px}
@@ -432,6 +432,7 @@
         <h2 id="t-controls">Personalização total</h2>
         <p class="hint">Arraste para simular. Toque em qualquer número para digitar um valor exato.</p>
         <div id="controls"></div>
+        <div class="reset-row"><button type="button" class="reset-btn" id="reset-all" data-tip="Começar nova simulação" aria-label="Começar nova simulação"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button></div>
       </section>
 
       <section class="panel config" aria-labelledby="t-config">
@@ -479,7 +480,7 @@
 
       <section class="panel proposal hide-invalid" aria-labelledby="t-proposal">
         <h2 id="t-proposal">Investimento</h2>
-        <p class="hint" id="proposal-hint"></p>
+        <p class="hint editable-hint" id="proposal-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar descrição do investimento"></p>
         <div class="segmented plan-toggle" role="group" aria-label="Forma de acompanhamento">
           <button type="button" data-plan="mensalidade">Mensalidade</button>
           <button type="button" data-plan="apoio">Suporte eventual</button>
@@ -495,10 +496,21 @@
           <strong class="num" id="net"></strong>
         </div>
         <div class="reset-row"><button type="button" class="reset-btn" id="reset-price" data-tip="Restaurar cálculo padrão" aria-label="Restaurar cálculo padrão" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button></div>
-        <p class="validity" id="validity"></p>
+        <p class="validity editable-hint" id="validity" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar validade da proposta"></p>
       </section>
     </main>
   </div>
+
+  <dialog id="reset-dialog" aria-labelledby="r-title">
+    <form id="reset-form" method="dialog">
+      <h2 id="r-title">Começar uma nova simulação?</h2>
+      <p>Os controles das duas abas voltam aos valores iniciais. Os valores e textos do investimento não são alterados.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-ghost" id="r-cancel">Cancelar</button>
+        <button type="submit" class="btn" id="r-ok">Recomeçar</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="client-dialog" aria-labelledby="d-title">
     <form id="client-form" method="dialog">
@@ -591,6 +603,8 @@
     apoios: CONFIG.horasSuportePrevistas,
     apoioValor: CONFIG.valorHoraSuporte,
     implLabel: null,  // descrições e textos editados na página (null = usa o padrão)
+    proposalHint: null,
+    validityText: null,
     recLabel: null,
     supLabel: null,
     implHint: null,
@@ -655,7 +669,12 @@
   function $(id){ return document.getElementById(id); }
 
   /* ------- Atribuição de valores com vínculo ------- */
+  var pairsRev = {};
+  Object.keys(pairs).forEach(function(a){ pairsRev[pairs[a]] = a; });
+
   function setValue(key, v){
+    // O cenário com a solução nunca fica abaixo do atual
+    if (pairsRev[key]) v = Math.max(v, state[pairsRev[key]]);
     state[key] = v;
     if (pairs[key]) state[pairs[key]] = clamp(v + state.offset, 0, 100);
     if (key === "offset"){
@@ -724,7 +743,11 @@
     var done = false;
     function commit(save){
       if (done) return; done = true;
-      if (save){ var v = allowExpr ? evalExpr(field.value) : parseNum(field.value); if (v !== null) onCommit(v); }
+      if (save){
+        var raw = field.value;
+        var v = allowExpr ? evalExpr(raw) : parseNum(raw);
+        if (v !== null) onCommit(v, allowExpr && /[+\-*\/x×÷()]/.test(raw.replace(/^[\s+\-]+/, "")));
+      }
       field.replaceWith(btn);
       update();
       btn.focus();
@@ -742,9 +765,9 @@
   }
   // Quantidade mensal para os textos de apoio dos controles
   function qtdText(v){
-    var r = Math.round(v * 10) / 10;
+    var r = Math.round(v);
     var word = state.model === "conv" ? (r === 1 ? "fechamento" : "fechamentos") : (r === 1 ? "atendimento" : "atendimentos");
-    return n1.format(r) + " " + word + " por mês";
+    return n0.format(r) + " " + word + " por mês";
   }
 
   function build(d, parent){
@@ -786,11 +809,11 @@
 
     r.btn.setAttribute("aria-label", "Editar " + (typeof d.label === "string" ? d.label.toLowerCase() : "valor"));
     r.btn.addEventListener("click", function(){
-      inlineEdit(r.btn, state[d.key], function(v){
-        var floor = isPct ? 0 : 0;
-        var ceil = isPct ? 100 : Infinity;
-        setValue(d.key, clamp(v, floor, ceil));
-      });
+      inlineEdit(r.btn, state[d.key], function(v, usouConta){
+        // Em campos de porcentagem, uma conta como 56/80 vira 70%
+        if (isPct && usouConta && v > 0 && v <= 1) v = v * 100;
+        setValue(d.key, clamp(v, 0, isPct ? 100 : Infinity));
+      }, "", true);
     });
 
     r.minBtn.addEventListener("click", function(){
@@ -806,6 +829,11 @@
       }, "small");
     });
   }
+
+  // Guarda o estado e as faixas de origem, para o botão de nova simulação
+  var ESTADO_INICIAL = JSON.parse(JSON.stringify(state));
+  var FAIXAS_INICIAIS = {};
+  defs.concat(configDefs).forEach(function(d){ FAIXAS_INICIAIS[d.key] = { min: d.min, max: d.max }; });
 
   defs.forEach(function(d){ build(d, $("controls")); });
   configDefs.forEach(function(d){ build(d, $("config-controls")); });
@@ -846,8 +874,9 @@
   }
 
   function units(v){
-    var word = state.model === "conv" ? (v === 1 ? "venda" : "vendas") : (v === 1 ? "atendimento" : "atendimentos");
-    return n1.format(Math.round(v * 10) / 10) + " " + word + " por mês";
+    var r = Math.round(v);
+    var word = state.model === "conv" ? (r === 1 ? "venda" : "vendas") : (r === 1 ? "atendimento" : "atendimentos");
+    return n0.format(r) + " " + word + " por mês";
   }
   function paybackText(m){
     if (m === null) return "Não se aplica";
@@ -922,9 +951,11 @@
     $("hero-label").textContent = "Faturamento adicional em " + mTxt;
     $("roi-period").textContent = "em " + mTxt;
     var isApoio = state.plan === "apoio";
-    $("proposal-hint").textContent = isApoio
+    var propostaAuto = isApoio
       ? "Implementação única e suporte eventual conforme a necessidade, em " + mTxt + "."
       : "Implementação única e acompanhamento mensal por " + mTxt + ".";
+    setHint("proposal-hint", state.proposalHint || propostaAuto, false);
+    setHint("validity", state.validityText || validadeAuto(), false);
     document.querySelectorAll(".plan-toggle button").forEach(function(b){
       b.setAttribute("aria-pressed", String(b.dataset.plan === state.plan));
     });
@@ -939,7 +970,7 @@
       ? "Prazo de retorno, já incluídos os suportes"
       : "Prazo de retorno, já descontada a mensalidade";
     $("total-label").textContent = "Total em " + mTxt;
-    $("net-label").textContent = "Ganho no faturamento em " + mTxt;
+    $("net-label").textContent = "Ganho estimado no faturamento em " + mTxt;
     $("reset-price").hidden = isDefaultProposal();
     setHint("impl-label", state.implLabel || CONFIG.descricaoImplementacao, false);
     setHint("rec-label", state.recLabel || CONFIG.descricaoMensalidade, false);
@@ -959,6 +990,7 @@
       state.apoios === CONFIG.horasSuportePrevistas &&
       state.apoioValor === CONFIG.valorHoraSuporte &&
       state.implLabel === null && state.recLabel === null && state.supLabel === null &&
+      state.proposalHint === null && state.validityText === null &&
       state.implHint === null && state.recHint === null && state.supHint === null && state.recNote === null;
   }
 
@@ -1177,7 +1209,7 @@
     pg.text(money(c.invest), R - rp, iy, "HB", 10, PC.ink, "right");
     iy += 12;
     pg.rrect(rx + rp, iy, rw - rp * 2, 32, 6, PC.afterSoft);
-    pg.text("Ganho no faturamento em " + mTxt, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
+    pg.text($("net-label").textContent, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
     pg.text(money(c.net), R - rp - 12, iy + 20.5, "HB", 13, PC.after, "right");
     iy += 32 + 16;
     pg.text($("validity").textContent, rx + rw / 2, iy, "H", 7.5, PC.stone, "center");
@@ -1191,7 +1223,7 @@
     fy += 4;
     var w4 = pg.text("Entre em contato: ", L, fy, "H", 7, PC.mist);
     pg.text(CONFIG.emailContato, L + w4, fy, "H", 7, PC.stone);
-    fy += 9;
+    fy += 15;
     pg.text("Até breve!", L, fy, "H", 7, PC.mist);
 
     return buildPdfBytes(pg.ops.join("\n"), title);
@@ -1207,7 +1239,7 @@
   $("rec").addEventListener("click", function(){
     inlineEdit($("rec"), Math.round(compute(state).recM), function(v){ state.recManual = Math.max(v, 0); }, "", true);
   });
-  [["impl-label", "implLabel"], ["rec-label", "recLabel"], ["apoio-label", "supLabel"], ["impl-hint", "implHint"], ["rec-hint", "recHint"], ["apoio-hint", "supHint"], ["rec-note", "recNote"]].forEach(function(pair){
+  [["impl-label", "implLabel"], ["rec-label", "recLabel"], ["apoio-label", "supLabel"], ["proposal-hint", "proposalHint"], ["validity", "validityText"], ["impl-hint", "implHint"], ["rec-hint", "recHint"], ["apoio-hint", "supHint"], ["rec-note", "recNote"]].forEach(function(pair){
     var el = $(pair[0]), key = pair[1];
     el.addEventListener("keydown", function(e){
       if (e.key === "Enter" || e.key === "Escape"){ e.preventDefault(); el.blur(); }
@@ -1238,12 +1270,28 @@
   emailEl.textContent = CONFIG.emailContato;
   emailEl.href = "mailto:" + CONFIG.emailContato;
 
+  var resetDlg = $("reset-dialog");
+  $("reset-all").addEventListener("click", function(){ resetDlg.showModal(); });
+  $("r-cancel").addEventListener("click", function(){ resetDlg.close(); });
+  $("reset-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    // Volta apenas os controles da simulação, sem tocar na proposta
+    defs.forEach(function(d){
+      state[d.key] = ESTADO_INICIAL[d.key];
+      d.min = FAIXAS_INICIAIS[d.key].min;
+      d.max = FAIXAS_INICIAIS[d.key].max;
+    });
+    resetDlg.close();
+    update();
+  });
+
   $("reset-price").addEventListener("click", function(){
     state.implManual = null; state.recManual = null;
     state.parcelas = CONFIG.mensalidadesPrevistas;
     state.apoios = CONFIG.horasSuportePrevistas;
     state.apoioValor = CONFIG.valorHoraSuporte;
     state.implLabel = state.recLabel = state.supLabel = null;
+    state.proposalHint = state.validityText = null;
     state.implHint = state.recHint = state.supHint = state.recNote = null;
     update();
   });
@@ -1295,8 +1343,10 @@
   /* ------- Data e impressão ------- */
   $("date").textContent = new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"});
   var ate = new Date(); ate.setDate(ate.getDate() + CONFIG.validadeDias);
-  $("validity").textContent = "Proposta válida por " + CONFIG.validadeDias + " dias, até " +
-    ate.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}) + ".";
+  function validadeAuto(){
+    return "Proposta válida por " + CONFIG.validadeDias + " dias, até " +
+      ate.toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}) + ".";
+  }
   var printing = false;
   function saveBlob(bytes, fileName){
     var blob = new Blob([bytes], { type: "application/pdf" });
