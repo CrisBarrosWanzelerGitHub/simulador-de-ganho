@@ -205,8 +205,14 @@
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:16px;position:relative;z-index:2}
   .stat:first-child{border-radius:16px 0 0 16px}
   .stat:last-child{border-radius:0 16px 16px 0}
+  .tip-q{
+    width:16px;height:16px;padding:0;border-radius:50%;justify-content:center;font-size:10px;
+    margin:0 0 0 2px;vertical-align:1px;
+  }
+  .stat{z-index:1}
+  .stat:hover,.stat:focus-within{z-index:4}
   .tip{
-    display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink);
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink);
     background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-right:4px;cursor:help;outline:none;
   }
   .tip:focus-visible{box-shadow:0 0 0 2px var(--after)}
@@ -225,6 +231,8 @@
   .stat .v{text-align:right}
   .stat:first-child{z-index:3}
   .stat .k{align-self:start;text-wrap:balance}
+  .stat.stat-destaque{background:var(--after-soft)}
+  .stat-destaque .k,.stat-destaque .v{color:var(--after)}
   .stat p{margin:0}
   .stat .k{color:var(--stone);font-size:13px}
   .stat .v{font-size:24px;font-weight:600;margin-top:4px}
@@ -344,7 +352,7 @@
     }
     html,body{background:#fff;font-size:12px}
     .wrap{padding:0;max-width:none}
-    .js-off,.icon-btn,.pdf-status,.btn,.segmented,.config,.range-ends,.tip-box,.reset-row,.reset-btn,.notice{display:none!important}
+    .js-off,.icon-btn,.pdf-status,.btn,.segmented,.config,.range-ends,.tip-box,.tip-q,.reset-row,.reset-btn,.notice{display:none!important}
     header{margin-bottom:18px;flex-wrap:nowrap}
     .client{font-size:26px}
     .solution{font-size:13px}
@@ -424,13 +432,14 @@
   <div class="segmented" role="group" aria-label="Tipo de resultado">
     <button type="button" data-model="conv" aria-pressed="true">Mais vendas</button>
     <button type="button" data-model="agenda" aria-pressed="false">Agenda cheia</button>
+    <button type="button" data-model="tempo" aria-pressed="false">Tempo</button>
   </div>
 
   <div class="grid">
     <aside>
       <section class="panel" aria-labelledby="t-controls">
         <h2 id="t-controls">Personalização total</h2>
-        <p class="hint">Arraste para simular. Toque em qualquer número para digitar um valor exato.</p>
+        <p class="hint">Arraste para simular ou toque em qualquer número para digitar um valor exato.</p>
         <div id="controls"></div>
         <div class="reset-row"><button type="button" class="reset-btn" id="reset-all" data-tip="Começar nova simulação" aria-label="Começar nova simulação"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button></div>
       </section>
@@ -443,12 +452,12 @@
     </aside>
 
     <main class="result">
-      <p class="notice" role="status">Para ver o ganho, o cenário com a solução precisa ser maior que o cenário atual. Por favor, ajuste os valores.</p>
+      <p class="notice" id="notice" role="status"></p>
 
       <section class="panel hero hide-invalid" aria-live="polite">
         <p class="hero-label" id="hero-label"></p>
         <p class="hero-value num" id="annual">R$ 0</p>
-        <p class="hero-sub">Equivale a <strong class="num" id="monthly">R$ 0</strong> a mais por mês.</p>
+        <p class="hero-sub">Equivale a <strong class="num" id="monthly">R$ 0</strong><span id="monthly-suffix"> a mais por mês.</span></p>
 
         <div class="bars">
           <div class="bar-row">
@@ -465,16 +474,16 @@
 
       <div class="stats hide-invalid">
         <div class="stat">
-          <p class="k"><span class="tip" tabindex="0" aria-describedby="roi-tip">ROI<span class="tip-box" role="tooltip" id="roi-tip"></span></span> Retorno sobre o investimento <span id="roi-period"></span></p>
-          <p class="v num" id="roi"></p>
+          <p class="k"><span id="stat1-label"></span> <span class="tip tip-q" tabindex="0" aria-describedby="stat1-tip" aria-label="Como calculamos">?<span class="tip-box" role="tooltip" id="stat1-tip"></span></span></p>
+          <p class="v num" id="stat1-value"></p>
         </div>
         <div class="stat">
-          <p class="k" id="payback-label"></p>
-          <p class="v num" id="payback"></p>
+          <p class="k"><span id="stat2-label"></span> <span class="tip tip-q" tabindex="0" aria-describedby="stat2-tip" aria-label="Como calculamos">?<span class="tip-box" role="tooltip" id="stat2-tip"></span></span></p>
+          <p class="v num" id="stat2-value"></p>
         </div>
         <div class="stat">
-          <p class="k">Crescimento do faturamento mensal</p>
-          <p class="v num" id="growth-pct"></p>
+          <p class="k"><span id="stat3-label"></span> <span class="tip tip-q" tabindex="0" aria-describedby="stat3-tip" aria-label="Como calculamos">?<span class="tip-box" role="tooltip" id="stat3-tip"></span></span></p>
+          <p class="v num" id="stat3-value"></p>
         </div>
       </div>
 
@@ -491,7 +500,7 @@
           <li id="apoio-row" hidden><span class="editable-hint" id="apoio-label" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar descrição do serviço"></span><span class="num"><button type="button" class="price num" id="apoios" aria-label="Editar quantidade de horas de suporte"></button> × <button type="button" class="price num" id="apoio-valor" aria-label="Editar valor da hora de suporte"></button></span><small class="line-hint editable-hint" id="apoio-hint" contenteditable="true" spellcheck="false" role="textbox" title="Clique para editar" aria-label="Editar texto de apoio"></small></li>
           <li class="total"><span id="total-label"></span><span class="num" id="invest"></span></li>
         </ul>
-        <div class="net">
+        <div class="net" id="net-box">
           <span id="net-label"></span>
           <strong class="num" id="net"></strong>
         </div>
@@ -574,6 +583,10 @@
     acompanhamentoPadrao: "mensalidade",
 
     // ---- Plano e simulação ----
+    // ---- Aba Tempo ----
+    reducaoTempoSugerida: 50,        // % de redução sugerida ao mexer no tempo atual
+    horasPorDiaUtil: 8,              // base para converter horas em dias úteis
+
     mesesDoPlano: 12,                // período da simulação e da proposta (em meses)
     mensalidadesPrevistas: 11,       // quantidade de mensalidades cobradas no período
     acrescimoAutomatico: 3,          // pontos % somados ao cenário "com a solução"
@@ -594,6 +607,7 @@
     convA: 10, convB: 10 + CONFIG.acrescimoAutomatico,
     slots: 200, occA: 70, occB: 70 + CONFIG.acrescimoAutomatico,
     ticket: 300,
+    pessoas: 1, horasA: 1, vezes: 4, minB: 30, vezesB: 4,
     months: CONFIG.mesesDoPlano,
     parcelas: CONFIG.mensalidadesPrevistas,
     offset: CONFIG.acrescimoAutomatico,
@@ -630,6 +644,9 @@
     pct:   function(v){ return n1.format(v) + "%"; },
     pp:    function(v){ return "+" + n1.format(v) + " p.p."; },
     int:   function(v){ return n0.format(v); },
+    hours: function(v){ return n1.format(v) + " h"; },
+    mins:  function(v){ return n0.format(Math.round(v)) + " min"; },
+    freq:  function(v){ return n2.format(v); },
     mult:  function(v){ return "x" + n1.format(v); }
   };
   function money(v){ return brl0.format(Math.round(v)); }
@@ -654,6 +671,17 @@
     {key:"occA", models:["agenda"], label:"Horários preenchidos hoje", sub:function(){ return "Hoje: " + qtdText(compute(state).uA); }, min:1, max:100, step:1, f:"pct"},
     {key:"occB", models:["agenda"], label:"Horários preenchidos com a solução", sub:function(){ return "Estimativa: " + qtdText(compute(state).uB); }, min:1, max:100, step:1, f:"pct", after:true},
 
+    {key:"pessoas", models:["tempo"], label:"Pessoas que fazem a atividade", sub:"Quem executa a tarefa hoje", min:1, max:50, step:1, f:"int"},
+    {key:"horasA", models:["tempo"], label:"Tempo para realizar a atividade", sub:"Horas por pessoa, a cada execução", min:1, max:24, step:0.5, f:"hours"},
+    {key:"vezes", models:["tempo"], label:"Vezes por mês", sub:function(){ return "Hoje: " + horasText(compute(state).uA) + " / mês"; }, min:1, max:200, step:1, f:"int"},
+    {key:"minB", models:["tempo"], label:"Tempo da atividade com a solução", sub:"Minutos por pessoa, a cada execução", min:0, max:1440, step:5, f:"mins", after:true},
+    {key:"vezesB", models:["tempo"], label:"Vezes por mês com a solução",
+      sub:function(){
+        var c = compute(state);
+        return "Ganho estimado: " + horasText(Math.max(c.impM, 0)) + " / mês" +
+          (c.growth === null || c.growth <= 0 ? "" : ", " + n0.format(Math.round(c.growth)) + "% menos") + ".";
+      }, min:0, max:200, step:0.25, f:"freq", after:true},
+
     {key:"ticket", models:["conv","agenda"], label:{conv:"Ticket médio", agenda:"Valor médio por atendimento"},
       min:50, max:5000, step:10, f:"money", dividerIn:["conv","agenda"]}
   ];
@@ -675,7 +703,17 @@
   function setValue(key, v){
     // O cenário com a solução nunca fica abaixo do atual
     if (pairsRev[key]) v = Math.max(v, state[pairsRev[key]]);
+    // Na aba Tempo a lógica se inverte: com a solução, o tempo não pode ser maior
+    if (key === "minB") v = Math.min(v, state.horasA * 60);
+    if (key === "vezesB") v = Math.min(v, state.vezes);
+    if (key === "vezes"){
+      // A frequência com a solução acompanha, a menos que já tenha sido ajustada à parte
+      state.vezesB = state.vezesB === state.vezes ? v : Math.min(state.vezesB, v);
+    }
     state[key] = v;
+    if (key === "horasA"){
+      state.minB = Math.min(Math.round(v * 60 * (1 - CONFIG.reducaoTempoSugerida / 100) / 5) * 5, v * 60);
+    }
     if (pairs[key]) state[pairs[key]] = clamp(v + state.offset, 0, 100);
     if (key === "offset"){
       Object.keys(pairs).forEach(function(a){ state[pairs[a]] = clamp(state[a] + v, 0, 100); });
@@ -840,18 +878,28 @@
 
   /* ------- Cálculo ------- */
   function compute(s){
-    var uA, uB;
+    var uA, uB, revA, revB, impM;
+    var isTempo = s.model === "tempo";
     if (s.model === "conv"){
       uA = s.leads * s.convA / 100;
       uB = s.leads * s.convB / 100;
-    } else {
+    } else if (s.model === "agenda"){
       uA = s.slots * s.occA / 100;
       uB = s.slots * s.occB / 100;
+    } else {
+      // Aba Tempo: o resultado é medido em horas, não em reais
+      uA = s.horasA * s.pessoas * s.vezes;
+      uB = (s.minB / 60) * s.pessoas * s.vezesB;
     }
-    var revA = uA * s.ticket, revB = uB * s.ticket;
-    var impM = revB - revA;
+    if (isTempo){
+      revA = uA; revB = uB;
+      impM = uA - uB;
+    } else {
+      revA = uA * s.ticket; revB = uB * s.ticket;
+      impM = revB - revA;
+    }
     // Preço proporcional ao ganho, respeitando os mínimos definidos em CONFIG
-    var implAuto = impM * s.mult, recAuto = impM * s.rec / 100;
+    var implAuto = isTempo ? 0 : impM * s.mult, recAuto = isTempo ? 0 : impM * s.rec / 100;
     var implMin = s.implManual === null && implAuto < CONFIG.implementacaoMinima;
     var isApoio = s.plan === "apoio";
     var recMin = !isApoio && s.recManual === null && recAuto < CONFIG.mensalidadeMinima;
@@ -862,19 +910,26 @@
     var annual = impM * s.months;
     var net = annual - invest;
     return {
-      uA:uA, uB:uB, revA:revA, revB:revB, impM:impM, annual:annual,
+      uA:uA, uB:uB, revA:revA, revB:revB, impM:impM, annual:annual, isTempo:isTempo,
       impl:impl, recM:recM, invest:invest, net:net, implMin:implMin, recMin:recMin,
       roi: invest > 0 ? net / invest * 100 : 0,
       apoioTotal:apoioTotal,
-      payback: isApoio
-        ? (impM > 0 ? (impl + apoioTotal) / impM : null)
-        : ((impM - recM) > 0 ? impl / (impM - recM) : null),
+      payback: (!isTempo && impM > 0) ? invest / impM : null,
       growth: revA > 0 ? impM / revA * 100 : null
     };
   }
 
+  function horasText(v){
+    var r = Math.round(v * 10) / 10;
+    return n1.format(r) + (r === 1 ? " hora" : " horas");
+  }
+  function diasText(v){
+    var r = Math.round(v * 2) / 2;
+    return n1.format(r) + (r === 1 ? " dia" : " dias");
+  }
   function units(v){
     var r = Math.round(v);
+    if (state.model === "tempo") return horasText(v / Math.max(state.pessoas, 1)) + " por pessoa / mês";
     var word = state.model === "conv" ? (r === 1 ? "venda" : "vendas") : (r === 1 ? "atendimento" : "atendimentos");
     return n0.format(r) + " " + word + " por mês";
   }
@@ -918,29 +973,84 @@
     var m = state.months, mTxt = n0.format(m) + (m === 1 ? " mês" : " meses");
     app.classList.toggle("is-invalid", c.impM <= 0);
 
-    $("annual").textContent = money(Math.max(c.annual, 0));
-    $("monthly").textContent = money(Math.max(c.impM, 0));
+    var horasInt = function(v){ var r = Math.round(v); return n0.format(r) + (r === 1 ? " hora" : " horas"); };
+    var valorMes = function(v){ return c.isTempo ? horasInt(Math.max(v, 0)) : money(Math.max(v, 0)); };
+    $("annual").textContent = valorMes(c.annual);
+    $("monthly").textContent = valorMes(c.impM);
+    $("hero-label").textContent = (c.isTempo ? "Economia de tempo em " : "Faturamento adicional em ") + mTxt;
+    $("monthly-suffix").textContent = c.isTempo ? " economizadas por mês, aproximadamente." : " a mais por mês.";
+    $("notice").textContent = c.isTempo
+      ? "Para ver a economia, o tempo com a solução precisa ser menor que o atual. Por favor, ajuste os valores."
+      : "Para ver o ganho, o cenário com a solução precisa ser maior que o atual. Por favor, ajuste os valores.";
 
     var max = Math.max(c.revA, c.revB, 1);
     $("bar-before").style.width = Math.max(c.revA / max * 100, 18) + "%";
     $("bar-after").style.width = Math.max(c.revB / max * 100, 18) + "%";
-    $("rev-before").textContent = money(c.revA);
-    $("rev-after").textContent = money(c.revB);
+    $("rev-before").textContent = c.isTempo ? horasText(c.revA) : money(c.revA);
+    $("rev-after").textContent = c.isTempo ? horasText(c.revB) : money(c.revB);
     $("units-before").textContent = units(c.uA);
     $("units-after").textContent = units(c.uB);
-    $("growth").textContent = c.impM > 0 ? "Ganho de + " + money(c.impM) + " por mês" : "";
+    $("growth").textContent = c.impM <= 0 ? ""
+      : (c.isTempo ? "Economia de " + horasText(c.impM) + " por mês" : "Ganho de + " + money(c.impM) + " por mês");
 
 
-    $("roi").textContent = n0.format(Math.round(c.roi)) + "%";
-    $("roi-tip").innerHTML =
-      "<strong>Como calculamos o ROI</strong><br>" +
-      "Do faturamento adicional em " + mTxt + ", subtraímos o investimento total do período. " +
-      "O resultado é dividido pelo investimento total." +
-      '<span class="calc">(' + money(c.annual) + " − " + money(c.invest) + ") ÷ " + money(c.invest) +
-      " = " + n0.format(Math.round(c.roi)) + "%</span>" +
-      (c.roi > 0 ? "Ou seja, cada R$ 1,00 investido gera " + brl2.format(c.roi / 100) + " de ganho além do próprio valor investido." : "");
-    $("payback").textContent = paybackText(c.payback);
-    $("growth-pct").textContent = c.growth === null ? "Não se aplica" : "+" + n0.format(Math.round(c.growth)) + "%";
+    var modoSuporte = state.plan === "apoio";
+    var pctTxt = function(v){ return v === null ? "não se aplica" : "+" + n0.format(Math.round(v)) + "%"; };
+    var stats;
+    if (c.isTempo){
+      var horasPessoa = state.horasA * state.vezes - (state.minB / 60) * state.vezesB;
+      var dias = c.impM / CONFIG.horasPorDiaUtil;
+      stats = [
+        { label: "Redução do tempo gasto na atividade",
+          value: c.growth === null ? "Não se aplica" : n0.format(Math.round(c.growth)) + "%",
+          tip: "<strong>Como calculamos a redução</strong><br>" +
+               "Dividimos as horas economizadas pelo tempo gasto hoje e multiplicamos por 100." +
+               '<span class="calc">' + horasText(c.impM) + " ÷ " + horasText(c.revA) + " × 100 = " +
+               (c.growth === null ? "não se aplica" : n0.format(Math.round(c.growth)) + "%") + "</span>" },
+        { highlight: true,
+          label: "Horas liberadas por mês",
+          value: horasInt(Math.max(c.impM, 0)),
+          tip: "<strong>Como calculamos as horas liberadas</strong><br>" +
+               "Multiplicamos o tempo economizado por pessoa no mês pelo número de pessoas." +
+               '<span class="calc">' + horasText(Math.max(horasPessoa, 0)) + " × " + n0.format(state.pessoas) +
+               (state.pessoas === 1 ? " pessoa" : " pessoas") + " = " + horasText(Math.max(c.impM, 0)) + "</span>" },
+        { label: "Dias úteis liberados por mês",
+          value: diasText(Math.max(dias, 0)),
+          tip: "<strong>Como calculamos os dias úteis</strong><br>" +
+               "Dividimos as horas liberadas por " + n0.format(CONFIG.horasPorDiaUtil) + " horas, a base de um dia útil." +
+               '<span class="calc">' + horasText(Math.max(c.impM, 0)) + " ÷ " + n0.format(CONFIG.horasPorDiaUtil) + " = " +
+               diasText(Math.max(dias, 0)) + "</span>" }
+      ];
+    } else {
+      stats = [
+        { label: "ROI, retorno sobre o investimento em " + mTxt,
+          value: n0.format(Math.round(c.roi)) + "%",
+          tip: "<strong>Como calculamos o ROI</strong><br>" +
+               "Do faturamento adicional em " + mTxt + ", subtraímos o investimento total do período. " +
+               "O resultado é dividido pelo investimento total." +
+               '<span class="calc">(' + money(c.annual) + " − " + money(c.invest) + ") ÷ " + money(c.invest) +
+               " = " + n0.format(Math.round(c.roi)) + "%</span>" +
+               (c.roi > 0 ? "Ou seja, cada R$ 1,00 investido gera " + brl2.format(c.roi / 100) + " de ganho além do próprio valor investido." : "") },
+        { label: "Prazo de retorno do investimento total",
+          value: paybackText(c.payback),
+          tip: "<strong>Como calculamos o prazo de retorno</strong><br>" +
+               "Dividimos o investimento total do período (" +
+               (modoSuporte ? "implementação e suportes previstos" : "implementação e mensalidades") +
+               ") pelo ganho mensal." +
+               '<span class="calc">' + money(c.invest) + " ÷ " + money(c.impM) + " = " + paybackText(c.payback) + "</span>" },
+        { label: "Crescimento do faturamento mensal",
+          value: pctTxt(c.growth),
+          tip: "<strong>Como calculamos o crescimento</strong><br>" +
+               "Dividimos o ganho mensal pelo faturamento de hoje e multiplicamos por 100." +
+               '<span class="calc">' + money(c.impM) + " ÷ " + money(c.revA) + " × 100 = " + pctTxt(c.growth) + "</span>" }
+      ];
+    }
+    stats.forEach(function(st, i){
+      $("stat" + (i + 1) + "-value").parentElement.classList.toggle("stat-destaque", !!st.highlight);
+      $("stat" + (i + 1) + "-label").textContent = st.label;
+      $("stat" + (i + 1) + "-value").textContent = st.value;
+      $("stat" + (i + 1) + "-tip").innerHTML = st.tip;
+    });
 
     $("impl").textContent = money(c.impl);
     $("rec").textContent = money(c.recM);
@@ -948,8 +1058,6 @@
     $("net").textContent = money(c.net);
 
     $("months").textContent = n0.format(state.parcelas);
-    $("hero-label").textContent = "Faturamento adicional em " + mTxt;
-    $("roi-period").textContent = "em " + mTxt;
     var isApoio = state.plan === "apoio";
     var propostaAuto = isApoio
       ? "Implementação única e suporte eventual conforme a necessidade, em " + mTxt + "."
@@ -966,11 +1074,9 @@
     var noteText = state.recNote !== null ? state.recNote : CONFIG.textoRegraMensalidade;
     setHint("rec-note", noteText, !noteText);
     setHint("apoio-hint", state.supHint || CONFIG.hintSuporte || "Valor por hora de suporte", false);
-    $("payback-label").textContent = isApoio
-      ? "Prazo de retorno, já incluídos os suportes"
-      : "Prazo de retorno, já descontada a mensalidade";
     $("total-label").textContent = "Total em " + mTxt;
     $("net-label").textContent = "Ganho estimado no faturamento em " + mTxt;
+    $("net-box").hidden = c.isTempo;
     $("reset-price").hidden = isDefaultProposal();
     setHint("impl-label", state.implLabel || CONFIG.descricaoImplementacao, false);
     setHint("rec-label", state.recLabel || CONFIG.descricaoMensalidade, false);
@@ -1132,13 +1238,13 @@
 
     // Destaque e barras
     var hy = top + rp + 8;
-    pg.text("Faturamento adicional em " + mTxt, rx + rp, hy, "H", 8.5, PC.stone);
+    pg.text($("hero-label").textContent, rx + rp, hy, "H", 8.5, PC.stone);
     hy += 34;
-    pg.text(money(Math.max(c.annual, 0)), rx + rp, hy, "T", 36, PC.after);
+    pg.text($("annual").textContent, rx + rp, hy, "T", 36, PC.after);
     hy += 17;
     var w2 = pg.text("Equivale a ", rx + rp, hy, "H", 9, PC.stone);
-    var w3 = pg.text(money(Math.max(c.impM, 0)), rx + rp + w2, hy, "HB", 9, PC.ink);
-    pg.text(" a mais por mês.", rx + rp + w2 + w3, hy, "H", 9, PC.stone);
+    var w3 = pg.text($("monthly").textContent, rx + rp + w2, hy, "HB", 9, PC.ink);
+    pg.text($("monthly-suffix").textContent, rx + rp + w2 + w3, hy, "H", 9, PC.stone);
     hy += 14;
 
     var trackX = rx + rp + 100, trackW = R - rp - trackX, maxRev = Math.max(c.revA, c.revB, 1);
@@ -1148,19 +1254,19 @@
       pg.rrect(trackX, hy, trackW, 26, 5, PC.paper);
       var fw = Math.max(b[2] / maxRev, 0.18) * trackW;
       pg.rrect(trackX, hy, fw, 26, 5, b[3]);
-      pg.text(money(b[2]), trackX + fw - 9, hy + 16.5, "HB", 9, b[4], "right");
+      pg.text(c.isTempo ? horasText(b[2]) : money(b[2]), trackX + fw - 9, hy + 16.5, "HB", 9, b[4], "right");
       hy += 34;
     });
-    if (c.impM > 0) pg.text("Ganho de + " + money(c.impM) + " por mês", R - rp, hy + 4, "H", 8.5, PC.after, "right");
+    if (c.impM > 0) pg.text($("growth").textContent, R - rp, hy + 4, "H", 8.5, PC.after, "right");
     hy += 18;
     pg.rrect(rx, top, rw, hy - top, 8, null, PC.line);
 
     // Indicadores
     var sTop = hy + 10, colW = rw / 3, sp = 12;
     var stats = [
-      {label:"Retorno sobre o investimento em " + mTxt, value:$("roi").textContent, pill:"ROI"},
-      {label:$("payback-label").textContent, value:$("payback").textContent},
-      {label:"Crescimento do faturamento mensal", value:$("growth-pct").textContent}
+      {label:$("stat1-label").textContent, value:$("stat1-value").textContent},
+      {label:$("stat2-label").textContent, value:$("stat2-value").textContent},
+      {label:$("stat3-label").textContent, value:$("stat3-value").textContent}
     ];
     var maxLines = 0;
     stats.forEach(function(s){
@@ -1177,7 +1283,8 @@
         pg.text(s.pill, cx + sp + 4, ty, "HB", 6.5, PC.ink);
       }
       s.lines.forEach(function(t, j){ pg.text(t, cx + sp + (j === 0 ? s.indent : 0), ty + j * 10.5, "H", 7.4, PC.stone); });
-      pg.text(s.value, cx + colW - sp, valueY, "HB", 15, PC.ink, "right");
+      if (c.isTempo && i === 1) pg.rrect(cx, sTop, colW, valueY + sp - sTop, 8, PC.afterSoft);
+      pg.text(s.value, cx + colW - sp, valueY, "HB", 15, (c.isTempo && i === 1) ? PC.after : PC.ink, "right");
       if (i > 0) pg.line(cx, sTop, cx, valueY + sp, PC.line);
     });
     var sBottom = valueY + sp;
@@ -1208,10 +1315,13 @@
     pg.text("Total em " + mTxt, rx + rp, iy, "HB", 10, PC.ink);
     pg.text(money(c.invest), R - rp, iy, "HB", 10, PC.ink, "right");
     iy += 12;
-    pg.rrect(rx + rp, iy, rw - rp * 2, 32, 6, PC.afterSoft);
-    pg.text($("net-label").textContent, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
-    pg.text(money(c.net), R - rp - 12, iy + 20.5, "HB", 13, PC.after, "right");
-    iy += 32 + 16;
+    if (!c.isTempo){
+      pg.rrect(rx + rp, iy, rw - rp * 2, 32, 6, PC.afterSoft);
+      pg.text($("net-label").textContent, rx + rp + 12, iy + 19.5, "H", 9, PC.after);
+      pg.text(money(c.net), R - rp - 12, iy + 20.5, "HB", 13, PC.after, "right");
+      iy += 32;
+    }
+    iy += 16;
     pg.text($("validity").textContent, rx + rw / 2, iy, "H", 7.5, PC.stone, "center");
     iy += 12;
     pg.rrect(rx, iTop, rw, iy - iTop, 8, null, PC.line);
@@ -1383,7 +1493,7 @@
     var strong = document.createElement("strong"); strong.textContent = name;
     fc.appendChild(strong);
     fc.hidden = false;
-    var solName = state.model === "conv" ? "Venda Mais" : "Agenda Cheia";
+    var solName = state.model === "conv" ? "Venda Mais" : (state.model === "agenda" ? "Agenda Cheia" : "Ganho de Tempo");
     $("print-subtitle").textContent = "Soluções " + solName;
     var fileTitle = name + " - Simulador " + solName;
     dlg.close();

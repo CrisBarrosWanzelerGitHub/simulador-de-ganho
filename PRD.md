@@ -13,7 +13,7 @@
 | Repositório | github.com/CrisBarrosWanzelerGitHub/simulador-de-ganho |
 | Tags | simulador, ROI, proposta comercial, automação, UX, HTML, sem dependências |
 | Status | Em produção |
-| Última atualização | 25 de setembro de 2026 (nova simulação, escala dos deslizantes e textos editáveis) |
+| Última atualização | 30 de setembro de 2026 (aba Tempo e indicadores padronizados) |
 
 ---
 
@@ -65,7 +65,7 @@ Permitir que a pessoa cliente visualize, de forma simples e transparente, quanto
 Cada requisito tem um critério de aceitação verificável.
 
 ### RF-01 · Seleção do tipo de resultado
-Abas "Mais vendas" e "Agenda cheia", com controles próprios e cálculo específico.
+Abas "Mais vendas", "Agenda cheia" e "Tempo", com controles próprios e cálculo específico.
 **Aceitação:** ao trocar de aba, apenas os controles do modelo escolhido aparecem, e os resultados são recalculados em menos de 100 ms. Valores compartilhados (ticket médio) permanecem iguais nas duas abas.
 
 ### RF-02 · Controles deslizantes com edição exata
@@ -84,17 +84,21 @@ Abaixo dos controles percentuais, o texto de apoio mostra a quantidade mensal re
 O valor com a solução nunca fica abaixo do valor atual, nem pelo deslizante nem por digitação.
 **Aceitação:** com "Horários preenchidos hoje" em 65%, tentar definir 50% em "Horários preenchidos com a solução" resulta em 65%. Os dois deslizantes mantêm a mesma escala, para que o cenário com a solução apareça sempre à frente do atual.
 
+### RF-03d · Aba Tempo
+Simula o ganho de tempo da equipe, medido em horas, sem conversão em reais. Controles, nesta ordem: pessoas que fazem a atividade, tempo por execução hoje (em horas), vezes por mês, tempo por execução com a solução (em minutos) e vezes por mês com a solução (aceita decimais, para atividades menos frequentes que o mês).
+**Aceitação:** com 1 pessoa, 1 hora por execução, 4 vezes por mês e 30 minutos com a solução, a tela mostra "Economia de tempo em 12 meses: 24 horas", "Equivale a 2 horas economizadas por mês, aproximadamente", barras de 4 e 2 horas e os indicadores 50%, 2 horas e 0,5 dias, com o card de dias úteis em destaque. O texto de apoio do último controle traz o total mensal, o ganho percentual e o aviso de que o total já considera o novo tempo e a nova frequência. Reduzindo para 2 vezes por mês, o total com a solução cai para 15 horas e a economia vai a 75%. Ao mexer no tempo atual, o tempo com a solução acompanha com a redução sugerida e nunca fica acima do atual. A caixa "Ganho estimado no faturamento" não aparece nesta aba, e os preços seguem os valores mínimos, editáveis como nas demais abas.
+
 ### RF-04 · Resultado principal e comparação
 Exibe o faturamento adicional no período, o ganho mensal e barras comparando "Hoje" e "Com a solução".
 **Aceitação:** com os valores iniciais (300 oportunidades, 10% para 13%, ticket de R$ 300), a tela mostra R$ 9.000 e R$ 11.700 nas barras, "Ganho de + R$ 2.700 por mês" e R$ 32.400 em 12 meses.
 
 ### RF-05 · Indicadores
 Três caixas: ROI no período, prazo de retorno e crescimento do faturamento mensal, com rótulo à esquerda e número à direita, valores alinhados entre si.
-**Aceitação:** com os valores iniciais no modo mensalidade, a tela mostra 186%, 2,5 meses e +30%. Os três números ficam na mesma altura no computador e no PDF.
+**Aceitação:** com os valores iniciais no modo mensalidade, a tela mostra 186%, 4,2 meses e +30%. Na aba Tempo, os indicadores passam a ser redução do tempo, horas liberadas por mês e dias úteis liberados por mês. Os três números ficam na mesma altura no computador e no PDF.
 
-### RF-06 · Explicação do ROI
-A etiqueta "ROI" abre uma explicação com a fórmula e a conta do cenário atual.
-**Aceitação:** a explicação abre ao passar o mouse (computador) ou tocar (celular), fica inteira dentro da tela e se atualiza a cada mudança nos controles.
+### RF-06 · Explicação dos indicadores
+Os três indicadores trazem uma explicação com a fórmula e a conta do cenário atual, aberta por um ícone de interrogação discreto ao lado do rótulo, no mesmo padrão nos três.
+**Aceitação:** cada explicação abre ao passar o mouse (computador) ou tocar (celular), fica inteira dentro da tela, aparece por cima das caixas vizinhas e se atualiza a cada mudança nos controles. No prazo de retorno, a explicação cita o investimento total do período, com a composição conforme o formato (mensalidades ou suportes previstos). No crescimento, a conta mostra a multiplicação por 100.
 
 ### RF-07 · Proposta com dois formatos de acompanhamento
 Seletor entre "Mensalidade" e "Suporte eventual".
@@ -144,6 +148,7 @@ O botão "Salvar em PDF" pede o nome da pessoa cliente e gera a proposta.
 | Código | Regra |
 |---|---|
 | RN-01 | **Mais vendas:** vendas = oportunidades × conversão; faturamento = vendas × ticket médio |
+| RN-01b | **Tempo:** horas hoje = horas por execução × pessoas × vezes por mês; horas com a solução = (minutos por execução ÷ 60) × pessoas × vezes por mês com a solução; economia mensal = diferença entre as duas |
 | RN-02 | **Agenda cheia:** atendimentos = horários disponíveis × horários preenchidos; faturamento = atendimentos × valor médio por atendimento |
 | RN-03 | **Ganho mensal** = faturamento com a solução − faturamento de hoje. **Ganho no período** = ganho mensal × `mesesDoPlano` |
 | RN-04 | **Implementação proporcional** = ganho mensal × `multiplicadorImplementacao`, com piso em `implementacaoMinima` |
@@ -154,11 +159,12 @@ O botão "Salvar em PDF" pede o nome da pessoa cliente e gera a proposta.
 | RN-09 | **Investimento (suporte eventual)** = implementação + horas × valor da hora |
 | RN-10 | **Ganho no faturamento** = ganho no período − investimento |
 | RN-11 | **ROI** = (ganho no período − investimento) ÷ investimento × 100 |
-| RN-12 | **Prazo de retorno (mensalidade)** = implementação ÷ (ganho mensal − mensalidade) |
-| RN-13 | **Prazo de retorno (suporte)** = (implementação + total de suporte) ÷ ganho mensal |
+| RN-12 | **Prazo de retorno** = investimento total do período ÷ ganho mensal, nos dois formatos de acompanhamento |
 | RN-14 | **Crescimento do faturamento mensal** = ganho mensal ÷ faturamento de hoje × 100 |
 | RN-15 | Se o ganho mensal for zero ou negativo, os resultados ficam esmaecidos e aparece o pedido para ajustar os valores |
 | RN-16 | Ao mover o valor atual, o valor com a solução passa a ser o atual + `acrescimoAutomatico`, limitado a 100% |
+| RN-15b | Na aba Tempo, o tempo e a frequência com a solução nunca ficam acima dos atuais. Ao mexer no tempo atual, o tempo com a solução passa a ser o atual menos a redução sugerida (`reducaoTempoSugerida`); ao mexer na frequência atual, a frequência com a solução acompanha, a menos que já tenha sido ajustada à parte |
+| RN-15c | Na aba Tempo não há ganho em reais: os preços proporcionais ficam zerados, prevalecem os mínimos e a caixa "Ganho estimado no faturamento" não é exibida |
 | RN-16b | O valor com a solução nunca é menor que o valor atual: ao tentar reduzir além disso, ele permanece igual ao atual. Os dois controles mantêm a mesma escala visual |
 | RN-17 | Percentuais ficam sempre entre 0% e 100% |
 | RN-18 | Valor digitado fora da faixa amplia a faixa: abaixo do mínimo vira o novo mínimo; acima do máximo vira o novo máximo |
@@ -166,7 +172,9 @@ O botão "Salvar em PDF" pede o nome da pessoa cliente e gera a proposta.
 | RN-19 | Contas nos preços e nos controles aceitam `+`, `-`, `*` (ou `x`, `×`), `/` e parênteses, com números no formato brasileiro; o resultado é arredondado para 2 casas decimais; divisão por zero é recusada |
 | RN-20 | Prazo de retorno abaixo de 1 mês aparece como "menos de 1 mês"; sem retorno possível, aparece "Não se aplica" |
 | RN-21 | **Nome do PDF:** "[nome da pessoa cliente] - Simulador [Venda Mais ou Agenda Cheia].pdf", sem os caracteres `\ / : * ? " < > \|` |
-| RN-22 | **Subtítulo do PDF:** "Soluções Venda Mais" ou "Soluções Agenda Cheia", conforme a aba ativa |
+| RN-22 | **Subtítulo do PDF:** "Soluções Venda Mais", "Soluções Agenda Cheia" ou "Soluções Ganho de Tempo", conforme a aba ativa |
+| RN-22b | **Dias úteis liberados:** arredondados para a meia unidade mais próxima (3,5 em vez de 3,8); o card recebe destaque de cor na tela e no PDF |
+| RN-22c | **Destaque da aba Tempo:** o valor em horas do destaque principal e do indicador de horas liberadas é arredondado para horas inteiras, com a palavra "aproximadamente" no texto de apoio |
 | RN-23 | **Quantidade nos textos de apoio e nas barras:** arredondada para o número inteiro mais próximo; "fechamento" na aba Mais vendas e "atendimento" na aba Agenda cheia, no singular apenas quando o valor é exatamente 1 |
 
 ---
@@ -193,6 +201,8 @@ Ficam no início do script, entre as marcações **"CONFIGURAÇÕES EDITÁVEIS"*
 | `hintSuporte` | "Valor cobrado por hora de suporte" | Texto abaixo do suporte eventual |
 | `textoRegraMensalidade` | "Suporte e consultoria conforme contrato" | Observação da mensalidade; vazio oculta |
 | `acompanhamentoPadrao` | "mensalidade" | Formato ao abrir: "mensalidade" ou "suporte" |
+| `reducaoTempoSugerida` | 50 | Percentual de redução sugerido na aba Tempo |
+| `horasPorDiaUtil` | 8 | Base para converter horas em dias úteis |
 | `mesesDoPlano` | 12 | Período da simulação e da proposta (meses) |
 | `mensalidadesPrevistas` | 11 | Mensalidades cobradas no período |
 | `acrescimoAutomatico` | 3 | Pontos percentuais somados ao cenário com a solução |
@@ -209,7 +219,12 @@ Ficam no início do script, entre as marcações **"CONFIGURAÇÕES EDITÁVEIS"*
 | Horários disponíveis por mês | Agenda cheia | 200 | 10 | 5.000 | 10 | Capacidade total da agenda |
 | Horários preenchidos hoje | Agenda cheia | 70% | 1% | 100% | 1 | Hoje: [atendimentos atuais] atendimentos por mês |
 | Horários preenchidos com a solução | Agenda cheia | 73% | 1% | 100% | 1 | Estimativa: [atendimentos com a solução] atendimentos por mês |
-| Ticket médio / Valor médio por atendimento | Ambas | R$ 300 | R$ 50 | R$ 5.000 | 10 | Sem texto |
+| Ticket médio / Valor médio por atendimento | Mais vendas e Agenda cheia | R$ 300 | R$ 50 | R$ 5.000 | 10 | Sem texto |
+| Pessoas que fazem a atividade | Tempo | 1 | 1 | 50 | 1 | Quem executa a tarefa hoje |
+| Tempo para realizar a atividade | Tempo | 1 h | 1 h | 24 h | 0,5 | Horas por pessoa, a cada execução |
+| Vezes por mês | Tempo | 4 | 1 | 200 | 1 | Hoje: [horas] por mês |
+| Tempo da atividade com a solução | Tempo | 30 min | 0 min | 1.440 min | 5 | Minutos por pessoa, a cada execução |
+| Vezes por mês com a solução | Tempo | 4 | 0 | 200 | 0,25 | Estimativa: [horas] por mês, [X]% menos, já com o novo tempo e a nova frequência |
 
 **Comportamento dos limites:**
 - os limites exibidos podem ser editados com um clique (o mínimo precisa ser menor que o máximo);
@@ -250,6 +265,7 @@ Os valores iniciais do painel vêm do `CONFIG`. Alterações no painel valem ape
 | `leads`, `convA`, `convB` | Oportunidades e conversões |
 | `slots`, `occA`, `occB` | Horários disponíveis e preenchimentos |
 | `ticket` | Ticket médio ou valor por atendimento |
+| `pessoas`, `horasA`, `vezes`, `minB`, `vezesB` | Aba Tempo: pessoas, horas por execução e frequência de hoje, minutos por execução e frequência com a solução |
 | `months` | Período da simulação |
 | `parcelas` | Quantidade de mensalidades |
 | `offset`, `mult`, `rec` | Ajustes do painel oculto |
@@ -400,6 +416,8 @@ Nenhum aviso é exibido nesses casos.
 | Descrições dos serviços editáveis na proposta | Permitir apresentar qualquer serviço, sem alterar o código |
 | Contas nos controles percentuais e quantidades inteiras | Refletir a realidade da operação (56 de 80 horários, sem meio atendimento) |
 | Mesma escala nos dois deslizantes do par | Evitar a leitura equivocada de que o cenário com a solução seria menor |
+| Frequência da atividade também muda com a solução | A automação costuma reduzir tanto a duração quanto o número de execuções; separar os dois mostra de onde vem cada ganho |
+| Aba Tempo apenas em horas, sem valor em reais | Mostrar o ganho operacional sem depender de um custo por hora informado pelo cliente |
 | Dois resets independentes: simulação e investimento | Cada card controla apenas os próprios valores, evitando perder ajustes de preço ao zerar a simulação |
 | Suporte eventual cobrado por hora (11 × R$ 200) | Alternativa à mensalidade |
 | 11 mensalidades em um período de 12 meses | Período de análise separado da quantidade cobrada |
