@@ -21,6 +21,7 @@
     --before:#C3C7C2;
     --after:#35584C;
     --after-soft:#E4ECE8;
+    --after-strong:#2B4A40;
     --warn:#8A5A2B;
     --warn-soft:#F6EEE4;
     --seg:#E7E9E5;
@@ -41,6 +42,7 @@
     --before:#4A504D;
     --after:#6FAE95;
     --after-soft:#1F2E28;
+    --after-strong:#FFFFFF;
     --warn:#E0B07F;
     --warn-soft:#2E251C;
     --seg:#2A2E32;
@@ -59,6 +61,7 @@
     --before:#4A504D;
     --after:#6FAE95;
     --after-soft:#1F2E28;
+    --after-strong:#FFFFFF;
     --warn:#E0B07F;
     --warn-soft:#2E251C;
     --seg:#2A2E32;
@@ -232,7 +235,8 @@
   .stat:first-child{z-index:3}
   .stat .k{align-self:start;text-wrap:balance}
   .stat.stat-destaque{background:var(--after-soft)}
-  .stat-destaque .k,.stat-destaque .v{color:var(--after)}
+  .stat-destaque .k{color:var(--after)}
+  .stat-destaque .v{color:var(--after-strong)}
   .stat p{margin:0}
   .stat .k{color:var(--stone);font-size:13px}
   .stat .v{font-size:24px;font-weight:600;margin-top:4px}
@@ -343,6 +347,7 @@
       --before:#C3C7C2;
       --after:#35584C;
       --after-soft:#E4ECE8;
+    --after-strong:#2B4A40;
       --warn:#8A5A2B;
       --warn-soft:#F6EEE4;
       --seg:#E7E9E5;
