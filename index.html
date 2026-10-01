@@ -322,6 +322,15 @@
     .btn,.date{white-space:nowrap}
     .panel,.hero{padding:24px}
   }
+  @media (max-width:520px){
+    .segmented{display:flex;width:100%}
+    .segmented button{flex:1;padding:8px 10px;font-size:13px;white-space:nowrap}
+    .plan-toggle{display:inline-flex;width:auto}
+    .plan-toggle button{flex:0 1 auto}
+  }
+  @media (max-width:345px){
+    .segmented button{padding:8px 6px;font-size:12px}
+  }
   @media (max-width:430px){
     .net{flex-wrap:wrap;row-gap:2px}
     .net span{flex-basis:100%;text-wrap:balance}
